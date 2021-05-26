@@ -1,0 +1,15 @@
+<launch>
+
+    <node name="pd_controller_node" pkg="pd_controller" type="pd_controller_node" output="screen">
+        <!-- <remap from="vins_estimator/odometry" to="/drone/odom" /> -->
+    </node>
+
+    <node name="GT_node" pkg="GroundTruthState" type="GroundTruthState_node" output="screen">
+        <!-- <remap from="vins_estimator/odometry" to="/drone/odom" /> -->
+    </node>
+    
+    <node name="traj_gen_node" pkg="trajectory_generator" type="trajectory_generator_node" output="screen">
+        <!-- <remap from="vins_estimator/odometry" to="/drone/odom" /> -->
+    </node>
+
+</launch>
