@@ -32,7 +32,7 @@
 // dynamic reconfigure
 #include <differential_flatness_controller/ControllerConfig.h>
 // own libraries 
-
+#include "ros_utils_lib/ros_utils.hpp"
 // definitions 
 
 #define DEBUG 0
@@ -59,11 +59,25 @@ struct UAV_state{
 
 class PD_controller{
 private:
+
+    std::string n_space_;
+    std::string self_localization_pose_topic_;
+    std::string self_localization_speed_topic_;
+    std::string sensor_measurement_imu_topic_;
+    std::string motion_reference_traj_topic_;
+    
+    std::string actuator_command_thrust_topic_;
+    std::string actuator_command_speed_topic_;
+
+    float mass = 1.0f;    
+
     
     ros::NodeHandle n;
     
-    ros::Subscriber sub_odom; 
     ros::Subscriber sub_traj; 
+    ros::Subscriber sub_pose; 
+    ros::Subscriber sub_speed; 
+    ros::Subscriber sub_imu; 
 
     ros::Publisher command_pub;
     ros::Publisher thrust_pub;
@@ -77,7 +91,6 @@ private:
     
     // controller stuff
     const float g = 9.81;
-    const float mass = 0.7f;    
     const float angle_limit = 1.0; // pi/4 < value < pi/2 
 
     
@@ -117,6 +130,11 @@ private:
     
     void CallbackTrajTopic(const trajectory_msgs::JointTrajectoryPoint& traj_msg);
     void CallbackOdomTopic(const nav_msgs::Odometry& odom_msg);
+
+    void CallbackPoseTopic(const geometry_msgs::PoseStamped& pose_msg);
+    void CallbackSpeedTopic(const geometry_msgs::TwistStamped& twist_msg);
+    void CallbackImuTopic(const sensor_msgs::Imu& imu_msg);
+
 
 };
 

@@ -1,6 +1,5 @@
 #include "PD_controller.hpp"
 
-
 //auxiliary functions
 void printrefs(const std::array<std::array<float,3>,4>& refs_);
 template <typename T> void SetZeros(Eigen::DenseBase<T>& m);
@@ -8,12 +7,27 @@ template <typename T> void SetZeros(Eigen::DenseBase<T>& m);
 
 PD_controller::PD_controller(/* args */)
 {
-    sub_traj =n.subscribe("/drone/traj",1,&PD_controller::CallbackTrajTopic,this);
-    sub_odom =n.subscribe("/drone/odom",1,&PD_controller::CallbackOdomTopic,this);
+    
+    ros_utils_lib::getPrivateParam<std::string>("~namespace", n_space_, "drone1");
+    ros_utils_lib::getPrivateParam<float>("~uav_mass", mass, 1.0f);
+    
+    ros_utils_lib::getPrivateParam<std::string>("~self_localization_pose_topic" ,  self_localization_pose_topic_,    "self_localization/pose");
+    ros_utils_lib::getPrivateParam<std::string>("~self_localization_speed_topic" , self_localization_speed_topic_,   "self_localization/speed");
+    ros_utils_lib::getPrivateParam<std::string>("~sensor_measurement_imu_topic" ,  sensor_measurement_imu_topic_,    "sensor_measurement/imu");
+    
+    ros_utils_lib::getPrivateParam<std::string>("~motion_reference_traj_topic"  ,  motion_reference_traj_topic_,     "motion_reference/trajectory");
+    ros_utils_lib::getPrivateParam<std::string>("~actuator_command_thrust_topic",  actuator_command_thrust_topic_,   "actuator_command/thrust");
+    ros_utils_lib::getPrivateParam<std::string>("~actuator_command_speed_topic" ,  actuator_command_speed_topic_,    "actuator_command/speed");
+    
 
-    command_pub = n.advertise<mav_msgs::RateThrust>("/uav/input/rateThrust", 1);
-    thrust_pub = n.advertise<mavros_msgs::Thrust>("/drone1/actuator_command/thrust", 1);
-    speeds_pub = n.advertise<geometry_msgs::TwistStamped>("/drone1/actuator_command/speed", 1);
+    sub_pose  = n.subscribe("/" + n_space_ + "/" + self_localization_pose_topic_  ,1,&PD_controller::CallbackPoseTopic,this);
+    sub_speed = n.subscribe("/" + n_space_ + "/" + self_localization_speed_topic_ ,1,&PD_controller::CallbackSpeedTopic,this);
+    sub_imu   = n.subscribe("/" + n_space_ + "/" + sensor_measurement_imu_topic_  ,1,&PD_controller::CallbackImuTopic,this);
+
+    sub_traj =n.subscribe("/" + n_space_ + "/" + motion_reference_traj_topic_ ,1,&PD_controller::CallbackTrajTopic,this);
+
+    thrust_pub = n.advertise<mavros_msgs::Thrust>         ("/" + n_space_ + "/" + actuator_command_thrust_topic_, 1);
+    speeds_pub = n.advertise<geometry_msgs::TwistStamped> ("/" + n_space_ + "/" + actuator_command_speed_topic_ , 1);
 
 }
 
@@ -24,17 +38,13 @@ void PD_controller::setUp(){
         std::cout << "PD controller linearized" << std::endl;
     #elif LINEARIZATION == 0
         std::cout << "PD controller non-linearized" << std::endl;    
+        std::cout << "uav_mass = " << mass << std::endl;    
     #endif
 
-    Kp_lin_ << 5,5,5;
-    Kd_lin_ << 2.5,2.5,2.0;
-    Kp_ang_ << 15.0,15.0,15.0;    
+    Kp_lin_ << 4.5,4.5,5.0;
+    Kd_lin_ << 1.0,1.0,2.0;
+    Kp_ang_ << 5.0,5.0,5.0;    
     
-    // Kp_lin_ << 1,1,1;
-    // Kd_lin_ << 0,0,0;
-    // Kp_ang_ << 1.0,1.0,1.0;    
-    
-
     // Ki_lin_ << 0.0001,0.0001,0.00001;
     Ki_lin_ << 0.0,0.0,0.001;
     accum_error_ << 0,0,0;
@@ -64,7 +74,7 @@ void PD_controller::computeActions(){
     Vector3d F_des;
     Vector3d e_p = r - r_t;
 
-    std::cout <<"Position error: \n" <<e_p << std::endl;
+    // std::cout <<"Position error: \n" <<e_p << std::endl;
 
     Vector3d e_v = rdot - rdot_t;
     
@@ -101,11 +111,11 @@ void PD_controller::computeActions(){
     Vector3d E_rot = (1.0f/2.0f) * V_e_rot;
     
 
-    std::cout << std::endl<<"rot_matrix" <<Rot_matrix.col(2) << std::endl;
+    // std::cout << std::endl<<"rot_matrix" <<Rot_matrix.col(2) << std::endl;
     
     u1 = (float) F_des.dot(Rot_matrix.col(2).normalized());
     
-    std::cout <<"u1 (N) : " << u1 << std::endl;
+    // std::cout <<"u1 (N) : " << u1 << std::endl;
 
     Vector3d outputs = -Kp_ang_mat * E_rot; 
 
@@ -271,12 +281,12 @@ void PD_controller::CallbackTrajTopic(const trajectory_msgs::JointTrajectoryPoin
 }
 
 
-void PD_controller::CallbackOdomTopic(const nav_msgs::Odometry& odom_msg){
+void PD_controller::CallbackPoseTopic(const geometry_msgs::PoseStamped& pose_msg){
 
-    state_.pos[0] = odom_msg.pose.pose.position.x;
-    state_.pos[1] = odom_msg.pose.pose.position.y;
-    state_.pos[2] = odom_msg.pose.pose.position.z;
-    auto quat = odom_msg.pose.pose.orientation;
+    state_.pos[0] = pose_msg.pose.position.x;
+    state_.pos[1] = pose_msg.pose.position.y;
+    state_.pos[2] = pose_msg.pose.position.z;
+    auto quat = pose_msg.pose.orientation;
     double roll, pitch, yaw;
     tf::Quaternion q(quat.x, quat.y, quat.z, quat.w);
     tf::Matrix3x3 R(q);
@@ -297,19 +307,29 @@ void PD_controller::CallbackOdomTopic(const nav_msgs::Odometry& odom_msg){
     #if DEBUG == 1    
         std::cout << "Roll: " << roll << ", Pitch: " << pitch << ", Yaw: " << yaw << std::endl;
     #endif
-    
+}
 
-    state_.vel[0]=odom_msg.twist.twist.linear.x;
-    state_.vel[1]=odom_msg.twist.twist.linear.y;
-    state_.vel[2]=odom_msg.twist.twist.linear.z;
 
-    state_.omega[0]=odom_msg.twist.twist.angular.x;
-    state_.omega[1]=odom_msg.twist.twist.angular.y;
-    state_.omega[2]=odom_msg.twist.twist.angular.z;
+
+void PD_controller::CallbackSpeedTopic(const geometry_msgs::TwistStamped& twist_msg){
+
+    state_.vel[0]=twist_msg.twist.linear.x;
+    state_.vel[1]=twist_msg.twist.linear.y;
+    state_.vel[2]=twist_msg.twist.linear.z;
+
+
+}
+
+void PD_controller::CallbackImuTopic(const sensor_msgs::Imu& imu_msg){
+
+    state_.omega[0]=imu_msg.angular_velocity.x;
+    state_.omega[1]=imu_msg.angular_velocity.y;
+    state_.omega[2]=imu_msg.angular_velocity.z;
 
     #if DEBUG == 1    
         std::cout << "d_Roll: " << state_.omega[0] << ", d_Pitch: " << state_.omega[1] << ", d_Yaw: " << state_.omega[2] << std::endl;
     #endif
+
 
 }
 

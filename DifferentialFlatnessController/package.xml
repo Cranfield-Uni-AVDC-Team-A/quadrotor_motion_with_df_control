@@ -16,7 +16,7 @@
 	<depend>tf2_ros</depend>
 	<depend>Eigen3</depend>
 	<depend>mavros</depend>
-	
+	<depend>ros_utils_lib</depend>
 
 	<depend>geometry_msgs</depend>
 	<depend>dynamic_reconfigure</depend>

@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   dynamic_reconfigure
   mavros
+  ros_utils_lib
 
 )
 find_package(Eigen3)
@@ -27,7 +28,7 @@ generate_dynamic_reconfigure_options(
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS roscpp std_msgs sensor_msgs mav_msgs tf2_ros geometry_msgs dynamic_reconfigure mavros
+  CATKIN_DEPENDS roscpp std_msgs sensor_msgs mav_msgs tf2_ros geometry_msgs dynamic_reconfigure mavros ros_utils_lib
   )
 
 include_directories(
