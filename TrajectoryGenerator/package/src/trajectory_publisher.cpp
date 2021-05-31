@@ -20,9 +20,12 @@ TrajectoryPublisher::TrajectoryPublisher(Trajectory_type type)
         default: throw std::invalid_argument("Trajectory type does not exist");  break;
     } 
 
-    traj_pub_ = nh_.advertise<trajectory_msgs::JointTrajectoryPoint>("/drone1/motion_reference/trajectory", 1);
+    traj_pub_ = nh_.advertise<trajectory_msgs::JointTrajectoryPoint>("motion_reference/trajectory", 1);
     waypoints_sub_ = nh_.subscribe("/drone/waypoints", 1, &TrajectoryPublisher::CallbackWaypointsTopic,this);
-    sub_odom = nh_.subscribe("/drone/odom", 1, &TrajectoryPublisher::CallbackOdomTopic,this);
+
+    pose_sub_ = nh_.subscribe("self_localization/pose",1,&TrajectoryPublisher::CallbackPoseTopic,this);
+    speed_sub_ = nh_.subscribe("self_localization/speed",1,&TrajectoryPublisher::CallbackSpeedTopic,this);
+
     path_pub_ = nh_.advertise<nav_msgs::Path >("/drone/traj_calculated", 1);
 
     actual_vel_acc_ = std::vector<float>(6);
@@ -110,7 +113,7 @@ void TrajectoryPublisher::plotTrajectory(float period){
         traj_pose.pose.position.y = y;
         traj_pose.pose.position.z = z;
 
-        traj_path.header.frame_id = "odom";
+        traj_path.header.frame_id = "map";
         traj_path.header.stamp = current_time;
 
         pose_vec.emplace_back(traj_pose);
@@ -198,26 +201,29 @@ void TrajectoryPublisher::CallbackWaypointsTopic(const std_msgs::Float32MultiArr
 }
 
 
-void TrajectoryPublisher::CallbackOdomTopic(const nav_msgs::Odometry &odom_msg){
-    actual_pose_[0] = odom_msg.pose.pose.position.x;
-    actual_pose_[1] = odom_msg.pose.pose.position.y;
-    actual_pose_[2] = odom_msg.pose.pose.position.z;
-    auto dt = ros::Time::now() - last_time_;
-    last_time_ = ros::Time::now();
+void TrajectoryPublisher::CallbackPoseTopic(const geometry_msgs::PoseStamped &pose_msg){
+    actual_pose_[0] = pose_msg.pose.position.x;
+    actual_pose_[1] = pose_msg.pose.position.y;
+    actual_pose_[2] = pose_msg.pose.position.z;
     // std::cout << "actual_pose" << actual_pose_[0] <<", " << actual_pose_[1] <<", " << actual_pose_[2] <<std::endl;
-
-    actual_vel_acc_[3] = (float) (odom_msg.twist.twist.linear.x - actual_vel_acc_[0])/dt.toSec();
-    actual_vel_acc_[4] = (float) (odom_msg.twist.twist.linear.y - actual_vel_acc_[1])/dt.toSec();
-    actual_vel_acc_[5] = (float) (odom_msg.twist.twist.linear.z - actual_vel_acc_[2])/dt.toSec();
-    actual_vel_acc_[0] = (float) odom_msg.twist.twist.linear.x;
-    actual_vel_acc_[1] = (float) odom_msg.twist.twist.linear.y;
-    actual_vel_acc_[2] = (float) odom_msg.twist.twist.linear.z;
     
-    
-    auto quat = odom_msg.pose.pose.orientation;
+    auto quat = pose_msg.pose.orientation;
     double roll, pitch, yaw;
     tf::Quaternion q(quat.x, quat.y, quat.z, quat.w);
     tf::Matrix3x3 R(q);
     R.getRPY(roll, pitch, yaw);
     actual_pose_[3]=yaw;
+}
+
+void TrajectoryPublisher::CallbackSpeedTopic(const geometry_msgs::TwistStamped &twist_msg){
+    auto dt = ros::Time::now() - last_time_;
+    last_time_ = ros::Time::now();
+
+    actual_vel_acc_[3] = (float) (twist_msg.twist.linear.x - actual_vel_acc_[0])/dt.toSec();
+    actual_vel_acc_[4] = (float) (twist_msg.twist.linear.y - actual_vel_acc_[1])/dt.toSec();
+    actual_vel_acc_[5] = (float) (twist_msg.twist.linear.z - actual_vel_acc_[2])/dt.toSec();
+    actual_vel_acc_[0] = (float) twist_msg.twist.linear.x;
+    actual_vel_acc_[1] = (float) twist_msg.twist.linear.y;
+    actual_vel_acc_[2] = (float) twist_msg.twist.linear.z;
+    
 }

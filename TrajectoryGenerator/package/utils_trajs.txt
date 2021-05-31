@@ -4,7 +4,7 @@ rostopic pub /drone/waypoints std_msgs/Float32MultiArray "layout:
     size: 0
     stride: 0
   data_offset: 0
-data: [7.0,20.0, 3.0,3.0,3.0,0.0, 6.0,0.0,3.0,0.0, 3.0,-3.0,3.0,0.0, -3.0,3.0,3.0,0.0, -6.0,0.0,3.0,0.0, -3.0,-3.0,3.0,0.0, 0.0,0.0,3.0,0.0]" 
+data: [7.0,3.0, 3.0,3.0,3.0,0.0, 6.0,0.0,3.0,0.0, 3.0,-3.0,3.0,0.0, -3.0,3.0,3.0,0.0, -6.0,0.0,3.0,0.0, -3.0,-3.0,3.0,0.0, 0.0,0.0,3.0,0.0]" 
 
 rostopic pub /drone/waypoints std_msgs/Float32MultiArray "layout:
   dim:
@@ -12,7 +12,7 @@ rostopic pub /drone/waypoints std_msgs/Float32MultiArray "layout:
     size: 0
     stride: 0
   data_offset: 0
-data: [7.0,10.0, 6.0,6.0,3.0,0.0, 12.0,0.0,3.0,0.0, 6.0,-6.0,3.0,0.0, -6.0,6.0,3.0,0.0, -12.0,0.0,3.0,0.0, -6.0,-6.0,3.0,0.0, 0.0,0.0,3.0,0.0]" 
+data: [7.0,2.0, 6.0,6.0,3.0,0.0, 12.0,0.0,3.0,0.0, 6.0,-6.0,3.0,0.0, -6.0,6.0,3.0,0.0, -12.0,0.0,3.0,0.0, -6.0,-6.0,3.0,0.0, 0.0,0.0,3.0,0.0]" 
 
 
 rostopic pub /drone/waypoints std_msgs/Float32MultiArray "layout:
@@ -21,7 +21,7 @@ rostopic pub /drone/waypoints std_msgs/Float32MultiArray "layout:
     size: 0
     stride: 0
   data_offset: 0
-data: [6.0,2.0, 17.25,3.631,6.306,0.0,  17.25,20.631,6.306,0.0,   16.745, 39.565,6.755,0.0,  8.0,42.0,4.0,0.0, 2.327,27.867,2.545,0.0,  2.19,9.0,2.0,0.0]" 
+data: [6.0,1.0, 17.25,3.631,6.306,0.0,  17.25,20.631,6.306,0.0,   16.745, 39.565,6.755,0.0,  8.0,42.0,4.0,0.0, 2.327,27.867,2.545,0.0,  2.19,9.0,2.0,0.0]" 
 
 rostopic pub /drone/waypoints std_msgs/Float32MultiArray "layout:
   dim:

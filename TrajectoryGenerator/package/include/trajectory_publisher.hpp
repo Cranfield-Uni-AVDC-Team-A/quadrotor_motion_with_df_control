@@ -3,6 +3,7 @@
 #include "ros/ros.h" 
 #include "std_msgs/Float32MultiArray.h"
 #include "geometry_msgs/PoseStamped.h"
+#include "geometry_msgs/TwistStamped.h"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "nav_msgs/Path.h"
 #include "nav_msgs/Odometry.h"
@@ -28,12 +29,14 @@ private:
     // Ros stuff
     ros::NodeHandle nh_;    
     ros::Subscriber waypoints_sub_;
-    ros::Subscriber sub_odom; 
+    // ros::Subscriber sub_odom; 
+    ros::Subscriber pose_sub_ ;
+    ros::Subscriber speed_sub_;
+    
 
     
     ros::Publisher traj_pub_;
     ros::Publisher path_pub_;
-    
 
 
     TrajectoryGenerator *traj_gen_;
@@ -61,7 +64,8 @@ private:
     void plotTrajectory(float period);
     void publishTrajectory();
     void CallbackWaypointsTopic(const std_msgs::Float32MultiArray& );
-    void CallbackOdomTopic(const nav_msgs::Odometry& );
+    void CallbackPoseTopic(const geometry_msgs::PoseStamped &pose_msg);
+    void CallbackSpeedTopic(const geometry_msgs::TwistStamped &twist_msg);
 
 
 

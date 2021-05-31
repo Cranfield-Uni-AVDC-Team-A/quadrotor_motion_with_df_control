@@ -42,6 +42,8 @@ int main(int argc, char **argv){
     trajectory_publisher.setup();
 
     ros::Rate rate(30);
+
+    std::cout<< "TRAJECTORY GENERATOR RUNNING"<< std::endl;
     while(ros::ok())
     {
         //updating all the ros msgs
