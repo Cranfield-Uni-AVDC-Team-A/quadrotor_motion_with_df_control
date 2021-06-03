@@ -31,8 +31,10 @@
 
 // dynamic reconfigure
 #include <differential_flatness_controller/ControllerConfig.h>
+#include <dynamic_reconfigure/server.h>
 // own libraries 
 #include "ros_utils_lib/ros_utils.hpp"
+#include <robot_process.h>
 // definitions 
 
 #define DEBUG 0
@@ -57,7 +59,7 @@ struct UAV_state{
 };
 
 
-class PD_controller{
+class PD_controller : public RobotProcess{
 private:
 
     std::string n_space_;
@@ -114,14 +116,15 @@ public:
     void updateErrors();
     void computeActions();
     void publishActions();
-    
-    void run();
-    void setUp();
-    
-
     #ifdef DYNAMIC_TUNING
     void parametersCallback(pd_controller::ControllerConfig &config, uint32_t level);
     #endif
+private: /*RobotProcess*/
+    void ownSetUp();
+    void ownStart();
+    void ownStop();
+    void ownRun();
+    
 
 private:
 

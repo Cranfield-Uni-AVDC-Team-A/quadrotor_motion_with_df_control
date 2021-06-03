@@ -45,6 +45,8 @@ void ETHSplineGenerator::genTraj(const std::vector<std::vector<float>>& waypoint
     for (int i=0;i < n_points;i++){
         vertices[i].addConstraint(mav_trajectory_generation::derivative_order::POSITION, Eigen::Vector3d(waypoints[0][i],waypoints[1][i],waypoints[2][i]));
     }
+    vertices[n_points-1].addConstraint(mav_trajectory_generation::derivative_order::VELOCITY, Eigen::Vector3d(0,0,0));
+    vertices[n_points-1].addConstraint(mav_trajectory_generation::derivative_order::ACCELERATION, Eigen::Vector3d(0,0,0));
 
     float v_x = (waypoints[0][n_points-2]-waypoints[0][n_points-1]);
     float v_y = (waypoints[1][n_points-2]-waypoints[1][n_points-1]);
@@ -200,8 +202,8 @@ bool ETHSplineGenerator::evaluateTrajectory(float t , std::array<std::array<floa
         for (int i=0;i<sample.size();i++)refs[i][2]=sample[i];
 
         #ifdef AUTOYAW 
-        refs[3][0] = -atan2f((double)refs[0][1],(double)refs[1][1])+M_PI/2.0f;
-        // refs[3][0] = 0;
+        //refs[3][0] = -atan2f((double)refs[0][1],(double)refs[1][1])+M_PI/2.0f;
+         refs[3][0] = 0;
         #endif
     
         

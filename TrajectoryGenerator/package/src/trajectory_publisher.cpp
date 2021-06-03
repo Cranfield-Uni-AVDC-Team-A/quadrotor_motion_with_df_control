@@ -20,11 +20,11 @@ TrajectoryPublisher::TrajectoryPublisher(Trajectory_type type)
         default: throw std::invalid_argument("Trajectory type does not exist");  break;
     } 
 
-    traj_pub_ = nh_.advertise<trajectory_msgs::JointTrajectoryPoint>("motion_reference/trajectory", 1);
+    traj_pub_ = nh_.advertise<trajectory_msgs::JointTrajectoryPoint>("/drone1/motion_reference/trajectory", 1);
     waypoints_sub_ = nh_.subscribe("/drone/waypoints", 1, &TrajectoryPublisher::CallbackWaypointsTopic,this);
 
-    pose_sub_ = nh_.subscribe("self_localization/pose",1,&TrajectoryPublisher::CallbackPoseTopic,this);
-    speed_sub_ = nh_.subscribe("self_localization/speed",1,&TrajectoryPublisher::CallbackSpeedTopic,this);
+    pose_sub_ = nh_.subscribe("/drone1/self_localization/pose",1,&TrajectoryPublisher::CallbackPoseTopic,this);
+    speed_sub_ = nh_.subscribe("/drone1/self_localization/speed",1,&TrajectoryPublisher::CallbackSpeedTopic,this);
 
     path_pub_ = nh_.advertise<nav_msgs::Path >("/drone/traj_calculated", 1);
 

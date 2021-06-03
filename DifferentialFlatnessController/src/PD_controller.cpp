@@ -32,7 +32,7 @@ PD_controller::PD_controller(/* args */)
 }
 
 
-void PD_controller::setUp(){
+void PD_controller::ownSetUp(){
 
     #if LINEARIZATION == 1
         std::cout << "PD controller linearized" << std::endl;
@@ -57,9 +57,14 @@ void PD_controller::setUp(){
     for (auto dof:refs_){
         for (auto elem:dof) elem = 0.0f;
     }
-
-};
+    //this->start();
+}
   
+void PD_controller::ownStart(){
+}
+
+void PD_controller::ownStop(){
+}
 
 void PD_controller::computeActions(){
 
@@ -248,8 +253,7 @@ void PD_controller::followTrajectory(){
 
 }
 
-void PD_controller::run(){
-    
+void PD_controller::ownRun(){
     if (flags_.traj_generated){
         followTrajectory();
     }
