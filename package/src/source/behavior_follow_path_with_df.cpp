@@ -53,6 +53,7 @@ void BehaviorFollowPathWithDF::onConfigure(){
   ros_utils_lib::getPrivateParam<std::string>("~status_topic"	                            , status_str                              ,"self_localization/flight_state");
   ros_utils_lib::getPrivateParam<std::string>("~path_blocked_topic"	                      , path_blocked_topic_str                  ,"environnment/path_blocked_by_obstacle");
   ros_utils_lib::getPrivateParam<std::string>("~motion_reference_waypoints_path_topic"	  , motion_reference_waypoints_path_topic   ,"motion_reference/waypoints");
+  ros_utils_lib::getPrivateParam<std::string>("~motion_reference_path_topic"	            , motion_reference_path_topic             ,"motion_reference/path");
 
   //Subscriber
   status_sub = node_handle.subscribe("/" + nspace + "/"+status_str, 1, &BehaviorFollowPathWithDF::statusCallBack, this);
@@ -95,8 +96,8 @@ void BehaviorFollowPathWithDF::onActivate(){
   command_high_level_pub.publish(high_level_command);
 
   //Publisher
-  path_references_pub_ = node_handle.advertise<std_msgs::Float32MultiArray>("/drone/waypoints", 1);
-  motion_reference_path_sub = node_handle.subscribe("/" + nspace + "/motion_reference/path", 1, &BehaviorFollowPathWithDF::pathCallBack, this);
+  path_references_pub_ = node_handle.advertise<std_msgs::Float32MultiArray>("/" + nspace + motion_reference_waypoints_path_topic, 1);
+  motion_reference_path_sub = node_handle.subscribe("/" + nspace + motion_reference_path_topic, 1, &BehaviorFollowPathWithDF::pathCallBack, this);
 }
 
 void BehaviorFollowPathWithDF::onDeactivate(){

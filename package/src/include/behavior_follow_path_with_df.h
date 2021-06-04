@@ -59,7 +59,8 @@ private:
   std::string status_str;
   std::string path_blocked_topic_str;
 	std::string motion_reference_waypoints_path_topic;
-
+  std::string motion_reference_path_topic;
+  
   ros::NodeHandle node_handle;
   std::string nspace; 
   // Subscriber

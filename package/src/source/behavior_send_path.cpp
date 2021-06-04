@@ -48,7 +48,8 @@ BehaviorSendPath::~BehaviorSendPath(){}
 void BehaviorSendPath::onConfigure(){ 
   nh = getNodeHandle();
   nspace = getNamespace();
-  motion_reference_path_pub = nh.advertise<nav_msgs::Path>("/" + nspace + "/motion_reference/path", 1, true);
+  ros_utils_lib::getPrivateParam<std::string>("~motion_reference_path_topic"	            , motion_reference_path_topic             ,"motion_reference/path");
+  motion_reference_path_pub = nh.advertise<nav_msgs::Path>("/" + nspace + "/" + motion_reference_path_topic, 1, true);
 
 }
 

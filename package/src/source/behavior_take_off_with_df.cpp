@@ -60,8 +60,8 @@ void BehaviorTakeOffWithDF::onConfigure(){
   battery_subscriber = nh.subscribe("/" + nspace + "/"+battery_topic, 1, &BehaviorTakeOffWithDF::batteryCallback, this);
   status_sub = nh.subscribe("/" + nspace + "/"+status_topic, 1, &BehaviorTakeOffWithDF::statusCallBack, this);
 
-  path_references_pub_ = nh.advertise<std_msgs::Float32MultiArray>("/" + motion_reference_waypoints_path_topic + "/"+status_topic, 1);
-  flight_state_pub = nh.advertise<aerostack_msgs::FlightState>("/" + nspace + "/"+status_topic, 1);
+  path_references_pub_ = nh.advertise<std_msgs::Float32MultiArray>("/" + nspace + "/" + motion_reference_waypoints_path_topic, 1);
+  flight_state_pub = nh.advertise<aerostack_msgs::FlightState>("/" + nspace + "/" + status_topic, 1);
   flight_action_pub = nh.advertise<aerostack_msgs::FlightActionCommand>("/" + nspace + "/" + flight_action_topic, 1);
   isLow=false;
 }

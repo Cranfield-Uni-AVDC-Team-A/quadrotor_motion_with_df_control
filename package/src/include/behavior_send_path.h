@@ -57,6 +57,8 @@ public:
 private:
   ros::NodeHandle nh;
   std::string nspace;
+
+  std::string motion_reference_path_topic;
   ros::Publisher motion_reference_path_pub;
 
 private:
