@@ -1,5 +1,6 @@
 <launch>
     <arg name="namespace"                                     default = "drone1" />
+    <arg name="uav_mass"                                      default = "0.7"     />
     <arg name="frecuency"                                     default = "100.0" />
     <arg name="activate_behavior_srv"                         default = "activate_behavior" />
     <arg name="deactivate_behavior_srv"                       default = "deactivate_behavior" />
@@ -14,7 +15,6 @@
     <arg name="behavior_system"                               default = "quadrotor_motion_with_df_control" />
     <arg name="status_topic"                                  default = "self_localization/flight_state" />
     <arg name="path_blocked_topic"                            default = "environnment/path_blocked_by_obstacle" />
-    <arg name="uav_mass"                                      default = "1.2"     />
     <arg name="motion_reference_waypoints_path_topic"         default = "motion_reference/waypoints"     /> 
     
     <arg name ="self_localization_pose_topic"                 default = "self_localization/pose" />
@@ -27,17 +27,17 @@
 
 
     <include file="$(find differential_flatness_controller)/launch/differential_flattness_controller.launch">
-      <param name = "~namespace"                              value = "$(arg namespace)" type = "str" />
-      <param name = "~uav_mass"                               value = "$(arg uav_mass)" />
+      <param name = "namespace"                              value = "$(arg namespace)" type = "str" />
+      <param name = "uav_mass"                               value = "$(arg uav_mass)" />
 
-      <param name = "~self_localization_pose_topic"           value = "$(arg self_localization_pose_topic)"  type="str"/>
-      <param name = "~self_localization_speed_topic"          value = "$(arg self_localization_speed_topic)" type="str"/>
-      <param name = "~sensor_measurement_imu_topic"           value = "$(arg sensor_measurement_imu_topic)"  type="str"/>
-      <param name = "~motion_reference_traj_topic"            value = "$(arg motion_reference_traj_topic)"   type="str"/>
-      <param name = "~actuator_command_thrust_topic"          value = "$(arg actuator_command_thrust_topic)" type="str"/>
-      <param name = "~actuator_command_speed_topic"           value = "$(arg actuator_command_speed_topic)"  type="str"/>
-      <param name = "~debug_traj_generated_topic"             value = "$(arg debug_traj_generated_topic)"    type="str" />
-      <param name = "~motion_reference_waypoints_path_topic"  value ="$(arg motion_reference_waypoints_path_topic)" type="str" />
+      <param name = "self_localization_pose_topic"           value = "$(arg self_localization_pose_topic)"  type="str"/>
+      <param name = "self_localization_speed_topic"          value = "$(arg self_localization_speed_topic)" type="str"/>
+      <param name = "sensor_measurement_imu_topic"           value = "$(arg sensor_measurement_imu_topic)"  type="str"/>
+      <param name = "motion_reference_traj_topic"            value = "$(arg motion_reference_traj_topic)"   type="str"/>
+      <param name = "actuator_command_thrust_topic"          value = "$(arg actuator_command_thrust_topic)" type="str"/>
+      <param name = "actuator_command_speed_topic"           value = "$(arg actuator_command_speed_topic)"  type="str"/>
+      <param name = "debug_traj_generated_topic"             value = "$(arg debug_traj_generated_topic)"    type="str" />
+      <param name = "motion_reference_waypoints_path_topic"  value ="$(arg motion_reference_waypoints_path_topic)" type="str" />
     </include>
 
    <group ns="$(arg namespace)/$(arg behavior_system)">
