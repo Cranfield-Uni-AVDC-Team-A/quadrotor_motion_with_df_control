@@ -193,7 +193,6 @@ void PD_controller::computeActions(){
     // std::cout << "u2_2  " << u2[0] << std::endl;
     // std::cout << "u2_3  " << u2[0] << std::endl;
     #endif
-    
 
 };
 
@@ -209,15 +208,11 @@ void PD_controller::publishActions(){
     thrust_msg.thrust= u1;
     speeds_msg.twist.angular.x = -u2[1];
     speeds_msg.twist.angular.y = u2[0];
-    // speeds_msg.twist.angular.y = 0;
     speeds_msg.twist.angular.z = u2[2];
-    // speeds_msg.twist.angular.z = 0;
-
+    
     thrust_pub.publish(thrust_msg);
     speeds_pub.publish(speeds_msg);
-
     
-    command_pub.publish(command_msg);
 };
 
 

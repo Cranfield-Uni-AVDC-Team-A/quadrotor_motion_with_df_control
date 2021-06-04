@@ -50,42 +50,31 @@ void BehaviorTakeOffWithDF::onConfigure(){
   nspace = getNamespace();
 
   ros::param::get("~battery_topic", battery_topic);
-  ros::param::get("~flight_state_topic", state_str);
 
-  ros_utils_lib::getPrivateParam<std::string>("~estimated_speed_topic"	    	, estimated_speed_topic			,"self_localization/speed");
   ros_utils_lib::getPrivateParam<std::string>("~estimated_pose_topic" 	    	, estimated_pose_topic 			,"self_localization/pose");
   ros_utils_lib::getPrivateParam<std::string>("~flight_action_topic"		  	  , flight_action_topic    		,"actuator_command/flight_action");
-  ros_utils_lib::getPrivateParam<std::string>("~motion_reference_speed_topic" 	, motion_reference_speed_topic  ,"motion_reference/speed");
-  ros_utils_lib::getPrivateParam<std::string>("~motion_reference_pose_topic"  	, motion_reference_pose_topic   ,"motion_reference/pose");
-  ros_utils_lib::getPrivateParam<std::string>("~set_control_mode_service_name"	, set_control_mode_service_name ,"set_control_mode");
   ros_utils_lib::getPrivateParam<std::string>("~status_topic"					        , status_str 					,"self_localization/flight_state");
 
-  ros::param::get("~status_topic", status_str);
-  set_control_mode_client_srv_ = nh.serviceClient<aerostack_msgs::SetControlMode>("/" + nspace + "/" + set_control_mode_service_name);
   pose_sub_ = nh.subscribe("/" + nspace + "/" + estimated_pose_topic ,1,&BehaviorTakeOffWithDF::poseCallback,this);
-  speeds_sub_ = nh.subscribe("/" + nspace + "/" + estimated_speed_topic,1,&BehaviorTakeOffWithDF::speedsCallback,this);
-  //flight_action_sub = nh.subscribe("/" + nspace + "/" + flight_action_topic,1,&BehaviorTakeOffWithDF::flightActionCallback,this);
-
-  //speed_references_pub_ = nh.advertise<geometry_msgs::TwistStamped>("/" + nspace + "/" + motion_reference_speed_topic, 1);
-  //pose_references_pub_ = nh.advertise<geometry_msgs::PoseStamped>("/" + nspace + "/" + motion_reference_pose_topic, 1);
-
-  path_references_pub_ = nh.advertise<std_msgs::Float32MultiArray>("/drone/waypoints", 1);
-
   battery_subscriber = nh.subscribe("/" + nspace + "/"+battery_topic, 1, &BehaviorTakeOffWithDF::batteryCallback, this);
   status_sub = nh.subscribe("/" + nspace + "/"+status_str, 1, &BehaviorTakeOffWithDF::statusCallBack, this);
-  flightstate_pub = nh.advertise<aerostack_msgs::FlightState>("/" + nspace + "/"+status_str, 1, true);
+
+  path_references_pub_ = nh.advertise<std_msgs::Float32MultiArray>("/drone/waypoints", 1);
+  flight_state_pub = nh.advertise<aerostack_msgs::FlightState>("/" + nspace + "/"+status_str, 1);
+  flight_action_pub = nh.advertise<aerostack_msgs::FlightActionCommand>("/" + nspace + "/" + flight_action_topic, 1);
   isLow=false;
 }
 
 void BehaviorTakeOffWithDF::onActivate(){
-  flight_action_pub = nh.advertise<aerostack_msgs::FlightActionCommand>("/" + nspace + "/" + flight_action_topic, 1, true);
+  
   aerostack_msgs::FlightActionCommand msg;
   msg.header.stamp = ros::Time::now();
   msg.action = aerostack_msgs::FlightActionCommand::TAKE_OFF;
-  flight_action_msg_.action = aerostack_msgs::FlightActionCommand::TAKE_OFF;
   flight_action_pub.publish(msg);
+
   activationPosition = position_;
   t_activacion_ = ros::Time::now();
+  
 }
 
 void BehaviorTakeOffWithDF::onDeactivate(){
@@ -93,21 +82,16 @@ void BehaviorTakeOffWithDF::onDeactivate(){
   msg.header.stamp = ros::Time::now();
   msg.action = aerostack_msgs::FlightActionCommand::HOVER;
   flight_action_pub.publish(msg);
-  flight_action_pub.shutdown();
+  // flight_action_pub.shutdown();
 }
 
 void BehaviorTakeOffWithDF::onExecute(){
   static bool doOnce = true;
-  if((ros::Time::now()-t_activacion_).toSec()>2 && doOnce){
+  if((ros::Time::now()-t_activacion_).toSec()>1 && doOnce){
     sendAltitudeSpeedReferences(TAKEOFF_SPEED);
     doOnce = false;
   }
-  if (status_msg.state == aerostack_msgs::FlightState::LANDED || status_msg.state == aerostack_msgs::FlightState::TAKING_OFF || status_msg.state == aerostack_msgs::FlightState::FLYING){
-    aerostack_msgs::FlightActionCommand msg;
-    msg.header.stamp = ros::Time::now();
-    msg.action = aerostack_msgs::FlightActionCommand::TAKE_OFF;
-    flight_action_pub.publish(msg);
-	}
+  
 }
 
 bool BehaviorTakeOffWithDF::checkSituation(){
@@ -139,7 +123,7 @@ void BehaviorTakeOffWithDF::checkGoal(){
     aerostack_msgs::FlightState msg;
     msg.header.stamp = ros::Time::now();
     msg.state = aerostack_msgs::FlightState::FLYING;
-    flightstate_pub.publish(msg);
+    flight_state_pub.publish(msg);
     BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
 	}
 }
@@ -157,23 +141,16 @@ bool BehaviorTakeOffWithDF::checkTakeoff(){
 void BehaviorTakeOffWithDF::sendAltitudeSpeedReferences(const double& dz_speed , const double takeoff_altitude){
   std_msgs::Float32MultiArray path;
   //path.layout
-  path.data = {1.0 , 0.1, activationPosition.x , activationPosition.y , activationPosition.z+TAKEOFF_ALTITUDE, 0.0};
+  path.data = {1.0 , TAKEOFF_SPEED, (float)activationPosition.x , (float)activationPosition.y , (float)activationPosition.z+TAKEOFF_ALTITUDE, 0.0};
+  std::cout << "path_sended" << activationPosition.x <<",  "<< activationPosition.y <<",  "<< activationPosition.z+TAKEOFF_ALTITUDE<<std::endl;
+  
   path_references_pub_.publish(path);
 }
 
-void BehaviorTakeOffWithDF::speedsCallback(const geometry_msgs::TwistStamped& _msg){
-	dz_measure_ = _msg.twist.linear.z;
-}
+
 
 void BehaviorTakeOffWithDF::poseCallback(const geometry_msgs::PoseStamped& _msg){
 	position_=_msg.pose.position;
-	tf::Quaternion q;
-	tf::quaternionMsgToTF(_msg.pose.orientation,q);
-	tf::Matrix3x3 m(q);
-    double roll,pitch,yaw;
-    m.getRPY(roll, pitch, yaw);
-	roll_ = roll;
-	pitch_ = pitch;
 }
 
 void BehaviorTakeOffWithDF::flightActionCallback(const aerostack_msgs::FlightActionCommand& _msg){

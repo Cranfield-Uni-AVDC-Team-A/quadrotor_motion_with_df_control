@@ -62,17 +62,8 @@
 #include "ros_utils_lib/control_utils.hpp"
 
 #define TAKEOFF_ALTITUDE 1.0f
-#define TAKEOFF_SPEED 0.2f
-
-#define LANDING_ALTITUDE -1.0f
-#define LANDING_SPEED -0.5f
-
-#define LANDING_TIMEOUT 60
-#define LANDING_CHECK_DELAY 1
-#define LANDED_Z_SPEED 0.1
-
+#define TAKEOFF_SPEED 0.1f
 #define DEBUG 0
-#define USE_POSE_REFERENCES 0
 
 class BehaviorTakeOffWithDF : public BehaviorExecutionManager
 {
@@ -83,21 +74,16 @@ public:
   int main(int argc, char** argv);
 
 private:
-  // ros::NodeHandle node_handle;
-
+  
   ros::NodeHandle nh;
   std::string nspace;
 
-  // Congfig variables
-  std::string state_str;
+  // Config variables
+  
   std::string battery_topic; 
 
-	std::string estimated_speed_topic;
 	std::string estimated_pose_topic;
 	std::string flight_action_topic;
-	std::string motion_reference_speed_topic;
-	std::string motion_reference_pose_topic;
-	std::string set_control_mode_service_name;
 	std::string status_str;
 
   const double BATTERY_LOW_THRESHOLD = 10;
@@ -114,15 +100,13 @@ private:
   ros::Subscriber pose_sub_;
   ros::Subscriber speeds_sub_;
   ros::Subscriber flight_action_sub;
-  ros::ServiceClient set_control_mode_client_srv_;
   ros::Publisher path_references_pub_;
-  ros::Publisher flightstate_pub;
+  ros::Publisher flight_state_pub;
 
   // Messages
   aerostack_msgs::FlightState status_msg;
 
   float dz_measure_;
-  double roll_ = 0.0f, pitch_ = 0.0f;
   geometry_msgs::Point position_;
   aerostack_msgs::FlightActionCommand flight_action_msg_;
   ros::Time landing_command_time_;
@@ -149,7 +133,6 @@ public: // Callbacks
   void statusCallBack(const aerostack_msgs::FlightState &msg);
   void batteryCallback(const sensor_msgs::BatteryState& battery);
   void poseCallback(const geometry_msgs::PoseStamped&);
-  void speedsCallback(const geometry_msgs::TwistStamped&);
   void flightActionCallback(const aerostack_msgs::FlightActionCommand& _msg);
 };
 

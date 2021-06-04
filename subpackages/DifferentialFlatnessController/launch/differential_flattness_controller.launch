@@ -3,7 +3,7 @@
 <launch>
 	
 	<arg name = "namespace"					        default = "drone1"/>
-	<arg name = "uav_mass"					        default = "0.7"/>
+	<arg name = "uav_mass"					        default = "1.2"/>
 	
     <arg name ="self_localization_pose_topic"   default = "self_localization/pose" />
     <arg name ="self_localization_speed_topic"  default = "self_localization/speed" />

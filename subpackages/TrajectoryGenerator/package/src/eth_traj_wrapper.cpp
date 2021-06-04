@@ -145,10 +145,6 @@ void ETHSplineGenerator::__plot(){
         pose.pose.position.z = sample[2];
         path.poses.emplace_back(pose); 
     }
-    static ros::NodeHandle nh ;
-    static ros::Publisher path_pub = nh.advertise<nav_msgs::Path>("/debug/traj_ethz",1);
-    path_pub.publish(path);
-    std::cout << "plotting "<< std::endl;
 }
 
 void ETHSplineGenerator::plot(){

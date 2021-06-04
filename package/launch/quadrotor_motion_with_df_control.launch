@@ -17,12 +17,12 @@
     <arg name="set_control_mode_service_name"      default="set_control_mode" />
     <arg name="path_blocked_topic"                 default="environnment/path_blocked_by_obstacle" />
     <arg name="robot_config_path"                  default="/configs/$(arg namespace)" />
-    <arg name= "uav_mass"                          default = "0.7"     />
+    <arg name= "uav_mass"                          default = "1.2"     />
 
 
     <include file="$(find differential_flatness_controller)/launch/differential_flattness_controller.launch">
       <param name = "~namespace"  value = "$(arg namespace)" type = "str" />
-      <param name = "~uav_mass"  value = "$(arg uav_mass)" type = "str" />
+      <param name = "~uav_mass"  value = "$(arg uav_mass)" />
     </include>
 
    <group ns="$(arg namespace)/$(arg behavior_system)">

@@ -176,7 +176,7 @@ void BehaviorFollowPathWithDF::statusCallBack(const aerostack_msgs::FlightState 
 void BehaviorFollowPathWithDF::pathCallBack(const nav_msgs::Path &msgPath){
   std_msgs::Float32MultiArray path;
   path.data.push_back(msgPath.poses.size());
-  path.data.push_back(0.3);
+  path.data.push_back(0.2);
   for(int i = 0; i<msgPath.poses.size(); i++){
     path.data.push_back(msgPath.poses[i].pose.position.x);
     path.data.push_back(msgPath.poses[i].pose.position.y);

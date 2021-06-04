@@ -81,7 +81,6 @@ private:
     ros::Subscriber sub_speed; 
     ros::Subscriber sub_imu; 
 
-    ros::Publisher command_pub;
     ros::Publisher thrust_pub;
     ros::Publisher speeds_pub;
     

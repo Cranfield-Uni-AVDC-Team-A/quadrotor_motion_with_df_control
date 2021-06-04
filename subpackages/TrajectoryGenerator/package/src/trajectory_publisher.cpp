@@ -189,10 +189,12 @@ void TrajectoryPublisher::CallbackWaypointsTopic(const std_msgs::Float32MultiArr
     #endif
 
     std::vector<std::vector<float>> waypoints = {waypoints_x,waypoints_y,waypoints_z,waypoints_yaw};
-    if (type_ == Trajectory_type::eth_spline_linear  || type_ == Trajectory_type::eth_spline_non_linear)
+    if (type_ == Trajectory_type::eth_spline_linear  || type_ == Trajectory_type::eth_spline_non_linear){
         is_trajectory_generated_ = traj_gen_->generateTrajectory(waypoints,medium_speed,actual_vel_acc_);
-    else
+    }
+    else{   
         is_trajectory_generated_ = traj_gen_->generateTrajectory(waypoints,medium_speed);
+    }
 
     if (is_trajectory_generated_) {
         begin_time_ = ros::Time::now();
