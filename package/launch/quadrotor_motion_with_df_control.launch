@@ -1,28 +1,43 @@
 <launch>
-    <arg name="namespace"                          default="drone1" />
-    <arg name="frecuency"                          default="100.0" />
-    <arg name="activate_behavior_srv"              default="activate_behavior" />
-    <arg name="deactivate_behavior_srv"            default="deactivate_behavior" />
-    <arg name="check_activation_conditions_srv"    default="check_activation_conditions" />
-    <arg name="activation_finished_topic"          default="behavior_activation_finished" />
-    <arg name="estimated_pose_topic"               default="self_localization/pose" />
-    <arg name="estimated_speed_topic"              default="self_localization/speed" />
-    <arg name="motion_reference_speed_topic"       default="motion_reference/speed" />
-    <arg name="motion_reference_pose_topic"        default="motion_reference/pose" />
-    <arg name="motion_reference_path_topic"        default="motion_reference/path" />
-    <arg name="motion_reference_remaining_path_topic"        default="motion_reference/remaining_path" />
-    <arg name="controllers_topic"                  default="actuator_command/flight_action" />
-    <arg name="behavior_system"                    default="quadrotor_motion_with_df_control" />
-    <arg name="status_topic"                       default="self_localization/flight_state" />
-    <arg name="set_control_mode_service_name"      default="set_control_mode" />
-    <arg name="path_blocked_topic"                 default="environnment/path_blocked_by_obstacle" />
-    <arg name="robot_config_path"                  default="/configs/$(arg namespace)" />
-    <arg name= "uav_mass"                          default = "1.2"     />
+    <arg name="namespace"                                     default = "drone1" />
+    <arg name="frecuency"                                     default = "100.0" />
+    <arg name="activate_behavior_srv"                         default = "activate_behavior" />
+    <arg name="deactivate_behavior_srv"                       default = "deactivate_behavior" />
+    <arg name="check_activation_conditions_srv"               default = "check_activation_conditions" />
+    <arg name="activation_finished_topic"                     default = "behavior_activation_finished" />
+    <arg name="estimated_pose_topic"                          default = "self_localization/pose" />
+    <arg name="estimated_speed_topic"                         default = "self_localization/speed" />
+    <arg name="motion_reference_speed_topic"                  default = "motion_reference/speed" />
+    <arg name="motion_reference_pose_topic"                   default = "motion_reference/pose" />
+    <arg name="motion_reference_path_topic"                   default = "motion_reference/path" />
+    <arg name="controllers_topic"                             default = "actuator_command/flight_action" />
+    <arg name="behavior_system"                               default = "quadrotor_motion_with_df_control" />
+    <arg name="status_topic"                                  default = "self_localization/flight_state" />
+    <arg name="path_blocked_topic"                            default = "environnment/path_blocked_by_obstacle" />
+    <arg name="uav_mass"                                      default = "1.2"     />
+    <arg name="motion_reference_waypoints_path_topic"         default = "motion_reference/waypoints"     /> 
+    
+    <arg name ="self_localization_pose_topic"                 default = "self_localization/pose" />
+    <arg name ="self_localization_speed_topic"                default = "self_localization/speed" />
+	  <arg name ="sensor_measurement_imu_topic"                 default = "sensor_measurement/imu" />
+	  <arg name ="motion_reference_traj_topic"                  default = "motion_reference/trajectory" />
+	  <arg name ="actuator_command_thrust_topic"               default = "actuator_command/thrust" />
+	  <arg name ="actuator_command_speed_topic"                default = "actuator_command/speed" />
+    <arg name ="debug_traj_generated_topic"                  default = "debug/traj_generated" />
 
 
     <include file="$(find differential_flatness_controller)/launch/differential_flattness_controller.launch">
-      <param name = "~namespace"  value = "$(arg namespace)" type = "str" />
-      <param name = "~uav_mass"  value = "$(arg uav_mass)" />
+      <param name = "~namespace"                              value = "$(arg namespace)" type = "str" />
+      <param name = "~uav_mass"                               value = "$(arg uav_mass)" />
+
+      <param name = "~self_localization_pose_topic"           value = "$(arg self_localization_pose_topic)"  type="str"/>
+      <param name = "~self_localization_speed_topic"          value = "$(arg self_localization_speed_topic)" type="str"/>
+      <param name = "~sensor_measurement_imu_topic"           value = "$(arg sensor_measurement_imu_topic)"  type="str"/>
+      <param name = "~motion_reference_traj_topic"            value = "$(arg motion_reference_traj_topic)"   type="str"/>
+      <param name = "~actuator_command_thrust_topic"          value = "$(arg actuator_command_thrust_topic)" type="str"/>
+      <param name = "~actuator_command_speed_topic"           value = "$(arg actuator_command_speed_topic)"  type="str"/>
+      <param name = "~debug_traj_generated_topic"             value = "$(arg debug_traj_generated_topic)"    type="str" />
+      <param name = "~motion_reference_waypoints_path_topic"  value ="$(arg motion_reference_waypoints_path_topic)" type="str" />
     </include>
 
    <group ns="$(arg namespace)/$(arg behavior_system)">
@@ -39,11 +54,9 @@
         <param name="~activation_finished_topic"               value="$(arg activation_finished_topic)"             type="str" /> 
         <param name="~motion_reference_speed_topic"            value="$(arg motion_reference_speed_topic)"          type="str" /> 
         <param name="~motion_reference_pose_topic"             value="$(arg motion_reference_pose_topic)"           type="str" /> 
-        <param name="~motion_reference_path_topic"             value="$(arg motion_reference_path_topic)"           type="str" /> 
-        <param name="~motion_reference_remaining_path_topic"   value="$(arg motion_reference_remaining_path_topic)" type="str" /> 
-        <param name="~status_topic"                            value="$(arg status_topic)"                          type="str" /> 
-        <param name="~set_control_mode_service_name"           value="$(arg set_control_mode_service_name)"         type="str" /> 
+        <param name="~motion_reference_path_topic"             value="$(arg motion_reference_path_topic)"           type="str" />
         <param name="~path_blocked_topic"                      value="$(arg path_blocked_topic)"                    type="str" />
+        <param name="~motion_reference_waypoints_path_topic"   value="$(arg motion_reference_waypoints_path_topic)" type="str" />
 
        <node name="behavior_quadrotor_df_motion_control" pkg="quadrotor_motion_with_df_control"  type="BehaviorQuadrotorDFMotionControl"  output="screen"/>
        <node name="behavior_take_off_with_df" pkg="quadrotor_motion_with_df_control"  type="BehaviorTakeOffWithDF"  output="screen"/>

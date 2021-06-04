@@ -76,7 +76,7 @@ void BehaviorSendPath::onActivate(){
     if (distance > MAX_DISTANCE){
       setErrorMessage("Error: Path is too long");
       std::cout<<"Error: Path is too long"<<std::endl;
-      return; 
+      return;
     }
   }else{
     setErrorMessage("Error: Path is not defined");
@@ -84,7 +84,7 @@ void BehaviorSendPath::onActivate(){
     return;
   }
   motion_reference_path_pub.publish(reference_path);
-  //BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
+  BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
 }
 
 void BehaviorSendPath::onDeactivate(){

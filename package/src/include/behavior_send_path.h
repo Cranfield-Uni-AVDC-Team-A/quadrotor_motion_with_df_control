@@ -31,38 +31,19 @@
 #ifndef SEND_PATH_H
 #define SEND_PATH_H
 
-// System
-#include <string>
-#include <thread>
-#include <tuple>
-#include <pluginlib/class_list_macros.h>
-#include <iostream>
-#include <fstream>
 // ROS
-#include "std_srvs/Empty.h"
-#include "std_msgs/Float32MultiArray.h"
-#include <geometry_msgs/Vector3Stamped.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/TwistStamped.h>
 #include <ros/ros.h>
-
-#include <tf/transform_datatypes.h>
-#include <tf/tf.h>
 #include <yaml-cpp/yaml.h>
 
 // Aerostack msgs
 #include <behavior_execution_manager_msgs/BehaviorActivationFinished.h>
-#include <aerostack_msgs/FlightActionCommand.h>
-#include <sensor_msgs/BatteryState.h>
-#include <aerostack_msgs/FlightState.h>
-#include "aerostack_msgs/SetControlMode.h"
 #include <nav_msgs/Path.h>
 
 // Aerostack libraries
 #include <BehaviorExecutionManager.h>
 #include "ros_utils_lib/ros_utils.hpp"
 
-#define DEBUG 0
 const int MAX_DISTANCE = 1000; //maximum meters allowed
 
 class BehaviorSendPath : public BehaviorExecutionManager
@@ -74,8 +55,6 @@ public:
   int main(int argc, char** argv);
 
 private:
-  // ros::NodeHandle node_handle;
-
   ros::NodeHandle nh;
   std::string nspace;
   ros::Publisher motion_reference_path_pub;

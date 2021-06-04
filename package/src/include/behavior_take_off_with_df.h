@@ -31,30 +31,16 @@
 #ifndef TAKE_OFF_WITH_DF_H
 #define TAKE_OFF_WITH_DF_H
 
-// System
-#include <string>
-#include <thread>
-#include <tuple>
-#include <pluginlib/class_list_macros.h>
-#include <iostream>
-#include <fstream>
 // ROS
-#include "std_srvs/Empty.h"
 #include "std_msgs/Float32MultiArray.h"
-#include <geometry_msgs/Vector3Stamped.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/TwistStamped.h>
 #include <ros/ros.h>
-
-#include <tf/transform_datatypes.h>
-#include <tf/tf.h>
 
 // Aerostack msgs
 #include <behavior_execution_manager_msgs/BehaviorActivationFinished.h>
 #include <aerostack_msgs/FlightActionCommand.h>
 #include <sensor_msgs/BatteryState.h>
 #include <aerostack_msgs/FlightState.h>
-#include "aerostack_msgs/SetControlMode.h"
 
 // Aerostack libraries
 #include <BehaviorExecutionManager.h>
@@ -63,7 +49,6 @@
 
 #define TAKEOFF_ALTITUDE 1.0f
 #define TAKEOFF_SPEED 0.1f
-#define DEBUG 0
 
 class BehaviorTakeOffWithDF : public BehaviorExecutionManager
 {
@@ -84,7 +69,8 @@ private:
 
 	std::string estimated_pose_topic;
 	std::string flight_action_topic;
-	std::string status_str;
+	std::string status_topic;
+	std::string motion_reference_waypoints_path_topic;
 
   const double BATTERY_LOW_THRESHOLD = 10;
   bool isLow;
@@ -106,10 +92,7 @@ private:
   // Messages
   aerostack_msgs::FlightState status_msg;
 
-  float dz_measure_;
   geometry_msgs::Point position_;
-  aerostack_msgs::FlightActionCommand flight_action_msg_;
-  ros::Time landing_command_time_;
   geometry_msgs::Point activationPosition;
 
 private:

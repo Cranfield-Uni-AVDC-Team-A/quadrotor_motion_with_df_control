@@ -31,34 +31,20 @@
 #ifndef FOLLOW_PATH_H
 #define FOLLOW_PATH_H
 
-// System
-#include <string>
-#include "math.h"
-
 // ROS
-#include "std_srvs/Empty.h"
 #include "std_msgs/Float32MultiArray.h"
 #include <ros/ros.h>
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2/LinearMath/Matrix3x3.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include <behavior_execution_manager_msgs/BehaviorActivationFinished.h>
+#include <std_msgs/Bool.h>
 
-#include <cmath>
 // Aerostack msgs
 #include <behavior_execution_manager_msgs/BehaviorActivationFinished.h>
 #include <aerostack_msgs/FlightActionCommand.h>
-#include <geometry_msgs/TwistStamped.h>
-#include <geometry_msgs/PoseStamped.h>
-#include "mav_msgs/RollPitchYawrateThrust.h"
 #include "aerostack_msgs/FlightState.h"
 #include <nav_msgs/Path.h>
 // Aerostack libraries
 #include <BehaviorExecutionManager.h>
-#include <yaml-cpp/yaml.h>
-#include <std_msgs/Bool.h>
+#include "ros_utils_lib/ros_utils.hpp"
 
-const int MAX_DISTANCE = 1000; //maximum meters allowed
 
 class BehaviorFollowPathWithDF : public BehaviorExecutionManager
 {
@@ -69,22 +55,14 @@ public:
 
 private:
   // Congfig variables
-  std::string self_localization_speed_str;
   std::string command_high_level_str;
-  std::string motion_reference_pose_str;
-  std::string self_localization_pose_str;  
-  std::string motion_reference_speed_str;
-  std::string motion_reference_remaining_path_str;
   std::string status_str;
-  std::string set_control_mode_srv;
-  std::string motion_reference_path_str;
   std::string path_blocked_topic_str;
+	std::string motion_reference_waypoints_path_topic;
 
   ros::NodeHandle node_handle;
   std::string nspace; 
   // Subscriber
-  ros::Subscriber self_localization_speed_sub; 
-  ros::Subscriber self_localization_pose_sub;
   ros::Subscriber status_sub;
   ros::Subscriber path_blocked_sub;
   ros::Subscriber motion_reference_path_sub;
@@ -94,23 +72,9 @@ private:
   
 
   // Messages
-  geometry_msgs::TwistStamped estimated_speed_msg;
   aerostack_msgs::FlightState status_msg;
   aerostack_msgs::FlightActionCommand high_level_command;
-  geometry_msgs::TwistStamped motion_reference_speed;
-  nav_msgs::Path reference_path;
-  nav_msgs::Path remaining_path;
-  geometry_msgs::PoseStamped last_path_point;
-  geometry_msgs::PoseStamped estimated_pose_msg;
-  geometry_msgs::PoseStamped reference_pose;
-  geometry_msgs::PoseStamped last_target_pose;
-  geometry_msgs::PoseStamped current_target_pose;
 
-  bool received_speed;
-  int remaining_points;
-  std::string direction;
-  bool execute;
-  bool initiated;
   bool path_blocked;
 
 private:
@@ -124,13 +88,8 @@ private:
   void checkProgress();
   void checkProcesses();
 
-  bool checkQuadrotorStopped();
 public: 
 // Callbacks
-void selfLocalizationSpeedCallBack(const geometry_msgs::TwistStamped &msg);
-void selfLocalizationPoseCallBack(const geometry_msgs::PoseStamped &msg);
-void motionReferencePoseCallBack(const geometry_msgs::PoseStamped &msg);
-void motionReferenceRemainingPathCallBack(const nav_msgs::Path &msg);
 void statusCallBack(const aerostack_msgs::FlightState &msg);
 void pathBlockedCallBack(const std_msgs::Bool &msg);
 void pathCallBack(const nav_msgs::Path &msgPath);

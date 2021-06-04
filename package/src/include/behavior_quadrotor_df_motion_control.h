@@ -61,7 +61,7 @@ public:
 
 private:
   ros::NodeHandle node_handle;
-  std::string nspace; 
+  std::string nspace;
 
 private:
   // BehaviorExecutionManager

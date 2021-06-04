@@ -45,23 +45,20 @@ BehaviorFollowPathWithDF::BehaviorFollowPathWithDF() : BehaviorExecutionManager(
 
 BehaviorFollowPathWithDF::~BehaviorFollowPathWithDF() {}
 
-void BehaviorFollowPathWithDF::onConfigure()
-{
+void BehaviorFollowPathWithDF::onConfigure(){
   node_handle = getNodeHandle();
   nspace = getNamespace();
 
-  ros::param::get("~estimated_speed_topic", self_localization_speed_str);
-  ros::param::get("~estimated_pose_topic", self_localization_pose_str);
-  ros::param::get("~controllers_topic", command_high_level_str);
-  ros::param::get("~status_topic", status_str);
-  ros::param::get("~path_blocked_topic", path_blocked_topic_str);
+  ros_utils_lib::getPrivateParam<std::string>("~controllers_topic"	                      , command_high_level_str                  ,"actuator_command/flight_action");
+  ros_utils_lib::getPrivateParam<std::string>("~status_topic"	                            , status_str                              ,"self_localization/flight_state");
+  ros_utils_lib::getPrivateParam<std::string>("~path_blocked_topic"	                      , path_blocked_topic_str                  ,"environnment/path_blocked_by_obstacle");
+  ros_utils_lib::getPrivateParam<std::string>("~motion_reference_waypoints_path_topic"	  , motion_reference_waypoints_path_topic   ,"motion_reference/waypoints");
 
   //Subscriber
   status_sub = node_handle.subscribe("/" + nspace + "/"+status_str, 1, &BehaviorFollowPathWithDF::statusCallBack, this);
 }
 
-bool BehaviorFollowPathWithDF::checkSituation()
-{
+bool BehaviorFollowPathWithDF::checkSituation(){
   //Quadrotor is FLYING
   if (status_msg.state == aerostack_msgs::FlightState::LANDED){
     setErrorMessage("Error: Drone is landed");
@@ -70,48 +67,26 @@ bool BehaviorFollowPathWithDF::checkSituation()
 return true;
 }
 
-void BehaviorFollowPathWithDF::checkGoal(){ 
-  if(initiated && remaining_points == 0){
-    //ros::Duration(5).sleep();
-    initiated = false;
-    BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
-  } 
+void BehaviorFollowPathWithDF::checkGoal(){
 }
 
-void BehaviorFollowPathWithDF::onExecute()
-{
+void BehaviorFollowPathWithDF::onExecute(){
   
 }
 
 void BehaviorFollowPathWithDF::checkProgress() {
   if(path_blocked){
     path_blocked=false;
-    path_blocked_sub.shutdown();
     BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::WRONG_PROGRESS);
   }
-  if (!execute) BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::WRONG_PROGRESS);
-
-  /*//Quadrotor is too far from the target and it is not moving
-  last_target_pose = current_target_pose;
-  float targets_distance = abs(sqrt(pow(last_target_pose.pose.position.x-current_target_pose.pose.position.x,2)+pow(last_target_pose.pose.position.y-current_target_pose.pose.position.y,2)+pow(last_target_pose.pose.position.z-current_target_pose.pose.position.z,2)));
-  float quadrotor_distance = abs(sqrt(pow(current_target_pose.pose.position.x-estimated_pose_msg.pose.position.x,2)+pow(current_target_pose.pose.position.y-estimated_pose_msg.pose.position.y,2)+pow(current_target_pose.pose.position.z-estimated_pose_msg.pose.position.z,2)));
-  if(remaining_points > 0 && targets_distance > quadrotor_distance * 2 && checkQuadrotorStopped()) BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::WRONG_PROGRESS);
-  */
 }
 
-void BehaviorFollowPathWithDF::onActivate()
-{
+void BehaviorFollowPathWithDF::onActivate(){
  //Subscribers
-  self_localization_speed_sub = node_handle.subscribe("/" + nspace + "/"+self_localization_speed_str, 1, &BehaviorFollowPathWithDF::selfLocalizationSpeedCallBack, this);
-  self_localization_pose_sub = node_handle.subscribe("/" + nspace + "/"+self_localization_pose_str, 1, &BehaviorFollowPathWithDF::selfLocalizationPoseCallBack, this);
-  
   path_blocked_sub = node_handle.subscribe("/" + nspace + "/"+path_blocked_topic_str, 1, &BehaviorFollowPathWithDF::pathBlockedCallBack, this);
   //Publishers
   command_high_level_pub = node_handle.advertise<aerostack_msgs::FlightActionCommand>("/" + nspace + "/"+command_high_level_str, 1, true);
 
-  remaining_points = 0;
-  initiated = false;
-  execute = true;
   path_blocked=false;
 
   //MOVE
@@ -124,49 +99,24 @@ void BehaviorFollowPathWithDF::onActivate()
   motion_reference_path_sub = node_handle.subscribe("/" + nspace + "/motion_reference/path", 1, &BehaviorFollowPathWithDF::pathCallBack, this);
 }
 
-void BehaviorFollowPathWithDF::onDeactivate()
-{
+void BehaviorFollowPathWithDF::onDeactivate(){
   aerostack_msgs::FlightActionCommand msg;
   msg.header.frame_id = "behavior_follow_path";
   msg.action = aerostack_msgs::FlightActionCommand::HOVER;
   command_high_level_pub.publish(msg);
 
-  self_localization_speed_sub.shutdown();
   command_high_level_pub.shutdown();
   path_blocked_sub.shutdown();
   path_references_pub_.shutdown();
 }
 
-bool BehaviorFollowPathWithDF::checkQuadrotorStopped()
-{
-  if (received_speed){
-    if (abs(estimated_speed_msg.twist.linear.x) <= 0.30 && abs(estimated_speed_msg.twist.linear.y) <= 0.30 && abs(estimated_speed_msg.twist.linear.z) <= 0.15){
-        return true;
-    }else{
-      return false;
-    }    
-  }else{
-    return false;
-  }
-}
-
-void BehaviorFollowPathWithDF::checkProcesses() 
-{ 
+void BehaviorFollowPathWithDF::checkProcesses() { 
  
 }
-
 
 // Callbacks
 void BehaviorFollowPathWithDF::pathBlockedCallBack(const std_msgs::Bool &msg){
   path_blocked = msg.data;
-}
-
-void BehaviorFollowPathWithDF::selfLocalizationSpeedCallBack(const geometry_msgs::TwistStamped &msg){ 
-  estimated_speed_msg = msg; 
-  received_speed = true;
-}
-void BehaviorFollowPathWithDF::selfLocalizationPoseCallBack(const geometry_msgs::PoseStamped &msg){
-  estimated_pose_msg = msg;
 }
 
 void BehaviorFollowPathWithDF::statusCallBack(const aerostack_msgs::FlightState &msg){
