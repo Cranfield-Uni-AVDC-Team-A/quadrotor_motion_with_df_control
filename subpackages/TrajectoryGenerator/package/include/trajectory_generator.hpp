@@ -34,9 +34,12 @@ public:
     virtual bool evaluateTrajectory(float t ,  std::array<std::array<float,3>,4>& refs) = 0;
     float getEndTime() const {return endTime_;}
     virtual ros::Time getBeginTime(){
-        std::cerr << "calling non implemented methow"<< std::endl;
+        std::cerr << "calling non implemented method"<< std::endl;
         return ros::Time::now();
     }
+    virtual void plot(){
+        std::cerr << "calling non implemented method"<< std::endl;
+    };
 
 };
 

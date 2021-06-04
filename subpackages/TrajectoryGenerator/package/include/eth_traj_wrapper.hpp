@@ -73,7 +73,6 @@ public:
     bool generateTrajectory(const std::vector<std::vector<float>>& waypoints, float speed){return true;}
     bool generateTrajectory(const std::vector<std::vector<float>>& waypoints, float speed , const std::vector<float>& actual_speed_acc);
     bool evaluateTrajectory(float t , std::array<std::array<float,3>,4>& refs_);
-    void plot();
     
     inline ros::Time getBeginTime(){
         time_mutex_.lock();
@@ -83,7 +82,7 @@ public:
     }
 
 private:
-    void __plot();
+    
     void genTraj(const std::vector<std::vector<float>>& waypoints, float speed , const std::vector<float>& actual_speed_acc);
     bool checkTrajectoryFeasibility();
 

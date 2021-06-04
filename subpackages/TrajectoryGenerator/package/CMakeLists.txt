@@ -12,12 +12,13 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
   geometry_msgs
   mav_trajectory_generation_ros
+  ros_utils_lib
 )
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS roscpp std_msgs sensor_msgs mav_msgs tf2_ros geometry_msgs  mav_trajectory_generation_ros
+  CATKIN_DEPENDS roscpp std_msgs sensor_msgs mav_msgs tf2_ros geometry_msgs  mav_trajectory_generation_ros ros_utils_lib
   
   )
   

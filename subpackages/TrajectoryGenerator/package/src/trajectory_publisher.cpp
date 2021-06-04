@@ -20,13 +20,21 @@ TrajectoryPublisher::TrajectoryPublisher(Trajectory_type type)
         default: throw std::invalid_argument("Trajectory type does not exist");  break;
     } 
 
-    traj_pub_ = nh_.advertise<trajectory_msgs::JointTrajectoryPoint>("/drone1/motion_reference/trajectory", 1);
-    waypoints_sub_ = nh_.subscribe("/drone/waypoints", 1, &TrajectoryPublisher::CallbackWaypointsTopic,this);
 
-    pose_sub_ = nh_.subscribe("/drone1/self_localization/pose",1,&TrajectoryPublisher::CallbackPoseTopic,this);
-    speed_sub_ = nh_.subscribe("/drone1/self_localization/speed",1,&TrajectoryPublisher::CallbackSpeedTopic,this);
+    ros_utils_lib::getPrivateParam<std::string>("~namespace", n_space_, "drone1");
+    ros_utils_lib::getPrivateParam<std::string>("~self_localization_pose_topic"   , self_localization_pose_topic_,    "self_localization/pose");
+    ros_utils_lib::getPrivateParam<std::string>("~self_localization_speed_topic"  , self_localization_speed_topic_,   "self_localization/speed");
+    ros_utils_lib::getPrivateParam<std::string>("~motion_reference_traj_topic"    , motion_reference_traj_topic_,     "motion_reference/trajectory");
+    ros_utils_lib::getPrivateParam<std::string>("~motion_reference_waypoints_path_topic", motion_reference_waypoints_path_topic_, "motion_reference/waypoints");
+    ros_utils_lib::getPrivateParam<std::string>("~debug_traj_generated_topic"           , debug_traj_generated_topic_, "debug/traj_generated");
 
-    path_pub_ = nh_.advertise<nav_msgs::Path >("/drone/traj_calculated", 1);
+
+    waypoints_sub_ = nh_.subscribe("/" + n_space_ + "/" + motion_reference_waypoints_path_topic_, 1, &TrajectoryPublisher::CallbackWaypointsTopic,this);
+    pose_sub_      = nh_.subscribe("/" + n_space_ + "/" + self_localization_pose_topic_,1,&TrajectoryPublisher::CallbackPoseTopic,this);
+    speed_sub_     = nh_.subscribe("/" + n_space_ + "/" + self_localization_speed_topic_,1,&TrajectoryPublisher::CallbackSpeedTopic,this);
+
+    traj_pub_ = nh_.advertise<trajectory_msgs::JointTrajectoryPoint>("/" + n_space_ + "/" + motion_reference_traj_topic_, 1);
+    path_pub_ = nh_.advertise<nav_msgs::Path >                      ("/" + n_space_ + "/" + debug_traj_generated_topic_, 1);
 
     actual_vel_acc_ = std::vector<float>(6);
     last_time_ = ros::Time::now();
@@ -49,17 +57,13 @@ void TrajectoryPublisher::run(){
 }
 
 void TrajectoryPublisher::publishTrajectory(){
-    using namespace std;
-    // cout<<"Publish Trajectory in"<<endl;
 
     static trajectory_msgs::JointTrajectoryPoint traj_msgs;
     static std::array<std::array<float,3>,4> refs;
     
     auto time = ros::Time().now() - traj_gen_->getBeginTime();
-    // std::cout << "time:" << time.toSec() << std::endl;
     bool publish  = traj_gen_->evaluateTrajectory(time.toSec(),refs);
 
-    // LOG("Publish Trajectory traze 1");
     
     static vector<double> pos(4);
     static vector<double> vel(4);
@@ -75,15 +79,10 @@ void TrajectoryPublisher::publishTrajectory(){
     traj_msgs.velocities = vel;
     traj_msgs.accelerations = acc;    
     
-    // LOG("Publish Trajectory traze 2");
     if (publish){
         traj_pub_.publish(traj_msgs);
     }
-
-    // LOG("Publish Trajectory out");
-
 }
-
 
 
 void TrajectoryPublisher::plotTrajectory(float period){
@@ -103,7 +102,6 @@ void TrajectoryPublisher::plotTrajectory(float period){
         y = poses[1][0];
         z = poses[2][0];
         
-        // std::cout << "x:  "<< x <<std::endl;        
         geometry_msgs::PoseStamped traj_pose;
 
         traj_pose.header.frame_id = frame_id_;
@@ -113,7 +111,7 @@ void TrajectoryPublisher::plotTrajectory(float period){
         traj_pose.pose.position.y = y;
         traj_pose.pose.position.z = z;
 
-        traj_path.header.frame_id = "map";
+        traj_path.header.frame_id = "odom";
         traj_path.header.stamp = current_time;
 
         pose_vec.emplace_back(traj_pose);
@@ -159,16 +157,7 @@ void TrajectoryPublisher::CallbackWaypointsTopic(const std_msgs::Float32MultiArr
         waypoints_yaw.emplace_back(waypoints_msg.data[i+3]);
     }
     n_waypoints+=1;
-    // } else{
-    // for(int i = 2; i < (n_waypoints*4 + 2);i = i+4){
-    //         waypoints_x.emplace_back(waypoints_msg.data[i]);
-    //         waypoints_y.emplace_back(waypoints_msg.data[i+1]);
-    //         waypoints_z.emplace_back(waypoints_msg.data[i+2]);
-    //         waypoints_yaw.emplace_back(waypoints_msg.data[i+3]);
-    //     }
-    // }
     
-   
     #if DEBUG_TRAJ == 2
         std::cout << "New checkPoints adquired: \n";
         std::cout << "x:{";

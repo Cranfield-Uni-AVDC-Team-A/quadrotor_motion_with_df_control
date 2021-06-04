@@ -107,7 +107,6 @@ void ETHSplineGenerator::genTraj(const std::vector<std::vector<float>>& waypoint
     time_mutex_.lock();
     begin_time_ = ros::Time::now();
     time_mutex_.unlock();
-    plot();
 
     // std::cout << "quitting Thread 1 "<< std::endl;
 
@@ -122,36 +121,6 @@ bool ETHSplineGenerator::generateTrajectory(const std::vector<std::vector<float>
     gen_traj_thread_ = std::thread(&ETHSplineGenerator::genTraj,this,waypoints,speed,actual_speed_acc);
     return true;
 }
-
-void ETHSplineGenerator::__plot(){
-    // gen_traj_thread_.join();
-
-    const float step = 0.1;
-    trajectory_mutex_.lock();
-    const float end_time = endTime_;
-    trajectory_mutex_.unlock();
-    nav_msgs::Path path;
-    path.header.frame_id = "map";
-
-    for (float t = 0.0f ; t < end_time ; t+= step){
-        geometry_msgs::PoseStamped pose;
-        pose.header.frame_id = "map";
-        trajectory_mutex_.lock();
-        Eigen::VectorXd sample = traj_ptr_->evaluate(t,mav_trajectory_generation::derivative_order::POSITION);
-        trajectory_mutex_.unlock();
-        // ros::Duratio
-        pose.pose.position.x = sample[0];
-        pose.pose.position.y = sample[1];
-        pose.pose.position.z = sample[2];
-        path.poses.emplace_back(pose); 
-    }
-}
-
-void ETHSplineGenerator::plot(){
-    if (plot_thread_.joinable())plot_thread_.join();
-    plot_thread_ = std::thread(&ETHSplineGenerator::__plot,this);
-}
-
 
 bool ETHSplineGenerator::evaluateTrajectory(float t , std::array<std::array<float,3>,4>& refs){
     trajectory_mutex_.lock();
@@ -172,9 +141,7 @@ bool ETHSplineGenerator::evaluateTrajectory(float t , std::array<std::array<floa
                 refs[i][1]=0.0f;
                 refs[i][2]=0.0f;
             }
-        }
-        // std::cerr<< "t:" <<t << " is > than "<< trajectory_.getMaxTime() <<std::endl;
-        // t = (float) trajectory_.getMaxTime()-0.1;
+        }       
     }
     else if (t<0) {
         t = 0.0f ;
@@ -199,7 +166,7 @@ bool ETHSplineGenerator::evaluateTrajectory(float t , std::array<std::array<floa
 
         #ifdef AUTOYAW 
         //refs[3][0] = -atan2f((double)refs[0][1],(double)refs[1][1])+M_PI/2.0f;
-         refs[3][0] = 0;
+            refs[3][0] = 0;
         #endif
     
         
@@ -210,6 +177,8 @@ bool ETHSplineGenerator::evaluateTrajectory(float t , std::array<std::array<floa
 }
 
 bool ETHSplineGenerator::checkTrajectoryFeasibility(){
+    
+    //TODO USE THIS
 
     /*
     * Constraints:
@@ -274,7 +243,8 @@ bool ETHSplineGenerator::checkTrajectoryFeasibility(){
         std::cout << "Trajectory generated is not feasible\n";
         return false;
     }
-    */ return true ;
+    */ 
+   return true ;
 
 
 }

@@ -16,6 +16,8 @@
   <depend>tf2_ros</depend>
   <depend>geometry_msgs</depend>
   <depend>Eigen3</depend>
+  <depend>ros_utils_lib</depend>
+  
   
   <depend>mav_trajectory_generation_ros</depend>
 

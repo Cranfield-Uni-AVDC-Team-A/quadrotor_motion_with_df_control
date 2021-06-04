@@ -18,6 +18,7 @@
 
 #include "trajectory_generator.hpp" 
 #include "eth_traj_wrapper.hpp"
+#include "ros_utils_lib/ros_utils.hpp"
 
 #define LOG_(x) std::cout<< x << std::endl
 
@@ -28,13 +29,17 @@ class TrajectoryPublisher{
 private:
     // Ros stuff
     ros::NodeHandle nh_;    
+    std::string n_space_;
+    std::string self_localization_pose_topic_;
+    std::string self_localization_speed_topic_;
+    std::string motion_reference_traj_topic_;
+    std::string motion_reference_waypoints_path_topic_;
+    std::string debug_traj_generated_topic_;
+
     ros::Subscriber waypoints_sub_;
-    // ros::Subscriber sub_odom; 
     ros::Subscriber pose_sub_ ;
     ros::Subscriber speed_sub_;
-    
-
-    
+        
     ros::Publisher traj_pub_;
     ros::Publisher path_pub_;
 
