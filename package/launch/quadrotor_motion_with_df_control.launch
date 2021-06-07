@@ -27,17 +27,17 @@
 
 
     <include file="$(find differential_flatness_controller)/launch/differential_flattness_controller.launch">
-      <param name = "namespace"                              value = "$(arg namespace)" type = "str" />
-      <param name = "uav_mass"                               value = "$(arg uav_mass)" />
+      <arg name = "namespace"                              value = "$(arg namespace)"/>
+      <arg name = "uav_mass"                               value = "$(arg uav_mass)"/>
 
-      <param name = "self_localization_pose_topic"           value = "$(arg self_localization_pose_topic)"  type="str"/>
-      <param name = "self_localization_speed_topic"          value = "$(arg self_localization_speed_topic)" type="str"/>
-      <param name = "sensor_measurement_imu_topic"           value = "$(arg sensor_measurement_imu_topic)"  type="str"/>
-      <param name = "motion_reference_traj_topic"            value = "$(arg motion_reference_traj_topic)"   type="str"/>
-      <param name = "actuator_command_thrust_topic"          value = "$(arg actuator_command_thrust_topic)" type="str"/>
-      <param name = "actuator_command_speed_topic"           value = "$(arg actuator_command_speed_topic)"  type="str"/>
-      <param name = "debug_traj_generated_topic"             value = "$(arg debug_traj_generated_topic)"    type="str" />
-      <param name = "motion_reference_waypoints_path_topic"  value ="$(arg motion_reference_waypoints_path_topic)" type="str" />
+      <arg name = "self_localization_pose_topic"           value = "$(arg self_localization_pose_topic)"/>
+      <arg name = "self_localization_speed_topic"          value = "$(arg self_localization_speed_topic)"/>
+      <arg name = "sensor_measurement_imu_topic"           value = "$(arg sensor_measurement_imu_topic)"/>
+      <arg name = "motion_reference_traj_topic"            value = "$(arg motion_reference_traj_topic)"/>
+      <arg name = "actuator_command_thrust_topic"          value = "$(arg actuator_command_thrust_topic)"/>
+      <arg name = "actuator_command_speed_topic"           value = "$(arg actuator_command_speed_topic)"/>
+      <arg name = "debug_traj_generated_topic"             value = "$(arg debug_traj_generated_topic)"/>
+      <arg name = "motion_reference_waypoints_path_topic"  value = "$(arg motion_reference_waypoints_path_topic)"/>
     </include>
 
    <group ns="$(arg namespace)/$(arg behavior_system)">
