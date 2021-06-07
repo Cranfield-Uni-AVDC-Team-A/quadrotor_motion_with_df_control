@@ -80,6 +80,12 @@ public:
         time_mutex_.unlock();
         return out;
     }
+    bool getTrajectoryGenerated() {
+        trajectory_mutex_.lock();
+        bool out = trajectory_generated_;
+        trajectory_mutex_.unlock();
+        return out;
+    }
 
 private:
     

@@ -49,7 +49,7 @@ private:
     bool is_trajectory_generated_ = false;
 
     ros::Time begin_time_;
-    std::string frame_id_ = "world"; 
+    std::string frame_id_ = "odom"; 
     Trajectory_type type_;
     float actual_pose_[4] = {0.0f,0.0f,0.0f,0.0f};
     std::vector<float> actual_vel_acc_;

@@ -102,6 +102,7 @@ void ETHSplineGenerator::genTraj(const std::vector<std::vector<float>>& waypoint
     traj_ptr_ = std::move(trajectory);
     endTime_ = traj_ptr_->getMaxTime();
     delay_t_ = (ros::Time::now()- t_i).toSec() + 0.0f;
+    trajectory_generated_=true;
     trajectory_mutex_.unlock();
     
     time_mutex_.lock();
@@ -117,6 +118,10 @@ void ETHSplineGenerator::genTraj(const std::vector<std::vector<float>>& waypoint
 
 bool ETHSplineGenerator::generateTrajectory(const std::vector<std::vector<float>>& waypoints, float speed , const std::vector<float>& actual_speed_acc)
 {
+    trajectory_mutex_.lock();
+    trajectory_generated_=false;
+    trajectory_mutex_.unlock();
+
     if (gen_traj_thread_.joinable()) gen_traj_thread_.join();
     gen_traj_thread_ = std::thread(&ETHSplineGenerator::genTraj,this,waypoints,speed,actual_speed_acc);
     return true;

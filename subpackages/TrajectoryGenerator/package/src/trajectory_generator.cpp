@@ -40,7 +40,7 @@ bool CircleGenerator::generateTrajectory(const vector<vector<float>>& waypoints,
     omega_  = speed / radius_;
     endTime_ = 100000; 
     beginTime_ = ros::Time().now();
-    
+    trajectory_generated_=true;
     return true;
 }
 
@@ -104,6 +104,7 @@ bool LemniscateGenerator::generateTrajectory(const vector<vector<float>>& waypoi
     std::cout<<"radius "<<radius_ << std::endl;
     omega_  = speed / radius_;
     endTime_ = 10000; 
+    trajectory_generated_=true;
     
     return true;
 };

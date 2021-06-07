@@ -86,6 +86,7 @@ void TrajectoryPublisher::publishTrajectory(){
 
 
 void TrajectoryPublisher::plotTrajectory(float period){
+
     
     std::array<std::array<float,3>,4> poses;
     std::vector<geometry_msgs::PoseStamped> pose_vec;
@@ -93,6 +94,9 @@ void TrajectoryPublisher::plotTrajectory(float period){
     
     auto current_time = ros::Time::now();
     float x,y,z;
+    while (!traj_gen_->getTrajectoryGenerated()){
+        ros::Duration(0.1).sleep();
+    }
     
     for (float t_ = 0; t_ < traj_gen_->getEndTime()+1;t_+=period ){
 
@@ -111,11 +115,12 @@ void TrajectoryPublisher::plotTrajectory(float period){
         traj_pose.pose.position.y = y;
         traj_pose.pose.position.z = z;
 
-        traj_path.header.frame_id = "odom";
-        traj_path.header.stamp = current_time;
-
+        
         pose_vec.emplace_back(traj_pose);
     }
+
+    traj_path.header.frame_id = frame_id_;
+    traj_path.header.stamp = current_time;
     
     traj_path.poses = pose_vec;
     path_pub_.publish(traj_path);

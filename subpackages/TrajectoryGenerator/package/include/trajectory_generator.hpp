@@ -41,6 +41,11 @@ public:
         std::cerr << "calling non implemented method"<< std::endl;
     };
 
+    bool trajectory_generated_ = false;
+    virtual bool getTrajectoryGenerated() {
+        return trajectory_generated_;
+    }
+
 };
 
 class CircleGenerator:public TrajectoryGenerator{
