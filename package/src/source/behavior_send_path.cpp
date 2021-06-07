@@ -60,32 +60,26 @@ void BehaviorSendPath::onActivate(){
   YAML::Node config_file = YAML::Load(arguments);
   if(config_file["path"].IsDefined()){
     std::vector<std::vector<double>> points=config_file["path"].as<std::vector<std::vector<double>>>();
-    geometry_msgs::PoseStamped path_point;
-    float distance = 0;
-    //First point
-    path_point.pose.position.x = points[0][0];
-    path_point.pose.position.y = points[0][1];
-    path_point.pose.position.z = points[0][2];
-    reference_path.poses.push_back(path_point);    
-    for(int i=1;i<points.size();i++){
+    for(int i=0;i<points.size();i++){
+      geometry_msgs::PoseStamped path_point;
+      path_point.header.frame_id="odom";
       path_point.pose.position.x = points[i][0];
       path_point.pose.position.y = points[i][1];
       path_point.pose.position.z = points[i][2];
-      reference_path.poses.push_back(path_point);
-      distance += abs(sqrt(pow(points[i-1][0]-points[i][0],2)+pow(points[i-1][1]-points[i][1],2)+pow(points[i-1][2]-points[i][2],2)));
-    }
-    if (distance > MAX_DISTANCE){
-      setErrorMessage("Error: Path is too long");
-      std::cout<<"Error: Path is too long"<<std::endl;
-      return;
+      reference_path.poses.emplace_back(path_point);
     }
   }else{
     setErrorMessage("Error: Path is not defined");
     std::cout<<"Error: Path is not defined"<<std::endl;
     return;
   }
+  reference_path.header.frame_id="odom";
+  reference_path.header.stamp = ros::Time::now();
   motion_reference_path_pub.publish(reference_path);
-  BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
+  std::cout<<"NEW PATH SENDED"<<std::endl;
+  ros::Duration(0.5).sleep();
+  // BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
+
 }
 
 void BehaviorSendPath::onDeactivate(){
@@ -95,10 +89,14 @@ void BehaviorSendPath::onExecute(){
 }
 
 bool BehaviorSendPath::checkSituation(){
+  ros::Duration(0.5).sleep();
+  BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
   return true;
 }
 
 void BehaviorSendPath::checkGoal(){
+  ros::Duration(0.5).sleep();
+  BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
 }
 
 void BehaviorSendPath::checkProgress(){

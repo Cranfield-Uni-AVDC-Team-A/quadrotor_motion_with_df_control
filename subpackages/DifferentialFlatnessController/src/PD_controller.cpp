@@ -54,7 +54,7 @@ PD_controller::PD_controller(/* args */)
     sub_speed = n.subscribe("/" + n_space_ + "/" + self_localization_speed_topic_ ,1,&PD_controller::CallbackSpeedTopic,this);
     sub_imu   = n.subscribe("/" + n_space_ + "/" + sensor_measurement_imu_topic_  ,1,&PD_controller::CallbackImuTopic,this);
 
-    sub_traj =n.subscribe("/" + n_space_ + "/" + motion_reference_traj_topic_ ,1,&PD_controller::CallbackTrajTopic,this);
+    sub_traj = n.subscribe("/" + n_space_ + "/" + motion_reference_traj_topic_ ,1,&PD_controller::CallbackTrajTopic,this);
 
     thrust_pub = n.advertise<mavros_msgs::Thrust>         ("/" + n_space_ + "/" + actuator_command_thrust_topic_, 1);
     speeds_pub = n.advertise<geometry_msgs::TwistStamped> ("/" + n_space_ + "/" + actuator_command_speed_topic_ , 1);

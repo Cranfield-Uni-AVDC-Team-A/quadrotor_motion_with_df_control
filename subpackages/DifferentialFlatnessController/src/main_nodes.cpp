@@ -1,6 +1,6 @@
 /*!********************************************************************************
  * \brief     Differential Flatness controller Implementation
- * \authors   Miguel Fernandez Cortizas
+ * \authors   Miguel Fernandez-Cortizas
  * \copyright Copyright (c) 2020 Universidad Politecnica de Madrid
  *
  * Redistribution and use in source and binary forms, with or without

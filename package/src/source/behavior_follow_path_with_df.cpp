@@ -106,9 +106,9 @@ void BehaviorFollowPathWithDF::onDeactivate(){
   msg.action = aerostack_msgs::FlightActionCommand::HOVER;
   command_high_level_pub.publish(msg);
 
-  command_high_level_pub.shutdown();
-  path_blocked_sub.shutdown();
-  path_references_pub_.shutdown();
+  // command_high_level_pub.shutdown();
+  // path_blocked_sub.shutdown();
+  // path_references_pub_.shutdown();
 }
 
 void BehaviorFollowPathWithDF::checkProcesses() { 
@@ -125,6 +125,7 @@ void BehaviorFollowPathWithDF::statusCallBack(const aerostack_msgs::FlightState 
 }
 
 void BehaviorFollowPathWithDF::pathCallBack(const nav_msgs::Path &msgPath){
+  std::cout << "PATH RECEIVED BY FOLLOW PATH" << std::endl;
   std_msgs::Float32MultiArray path;
   path.data.push_back(msgPath.poses.size());
   path.data.push_back(0.2);
@@ -134,5 +135,12 @@ void BehaviorFollowPathWithDF::pathCallBack(const nav_msgs::Path &msgPath){
     path.data.push_back(msgPath.poses[i].pose.position.z);
     path.data.push_back(0.0);
   }
+
+  std::cout << "PATH: [ " ;
+  for (auto x:path.data){
+    std::cout << x << " , " ;
+  }
+  std::cout <<" ]" << std::endl;
+  ros::Duration(0.5).sleep();
   path_references_pub_.publish(path);
 }

@@ -15,7 +15,7 @@ int main(int argc, char **argv){
     // TrajectoryPublisher trajectory_publisher(Trajectory_type::eth_spline_linear);
     trajectory_publisher.setup();
 
-    ros::Rate rate(30);
+    ros::Rate rate(100);
 
     std::cout<< "TRAJECTORY GENERATOR RUNNING"<< std::endl;
     while(ros::ok())
