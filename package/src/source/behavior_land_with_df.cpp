@@ -1,5 +1,5 @@
 /*!********************************************************************************
- * \brief     take_off behavior implementation 
+ * \brief     land behavior implementation 
  * \authors   Pablo Santamaria
  * \copyright Copyright (c) 2021 Universidad Politecnica de Madrid
  *
@@ -28,50 +28,45 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
-#include "../include/behavior_take_off_with_df.h"
+#include "../include/behavior_land_with_df.h"
 
 int main(int argc, char** argv){
   ros::init(argc, argv, ros::this_node::getName());
   std::cout << "Node: " << ros::this_node::getName() << " started" << std::endl;
-  BehaviorTakeOffWithDF behavior;
+  BehaviorLandWithDF behavior;
   behavior.start();
   return 0;
 }
 
-BehaviorTakeOffWithDF::BehaviorTakeOffWithDF() : BehaviorExecutionManager(){ 
-  setName("take_off_with_df");
+BehaviorLandWithDF::BehaviorLandWithDF() : BehaviorExecutionManager(){ 
+  setName("land_with_df");
   setExecutionGoal(ExecutionGoals::ACHIEVE_GOAL);
 }
 
-BehaviorTakeOffWithDF::~BehaviorTakeOffWithDF(){}
+BehaviorLandWithDF::~BehaviorLandWithDF(){}
 
-void BehaviorTakeOffWithDF::onConfigure(){ 
+void BehaviorLandWithDF::onConfigure(){ 
   nh = getNodeHandle();
   nspace = getNamespace();
-
-  ros::param::get("~battery_topic", battery_topic);
 
   ros_utils_lib::getPrivateParam<std::string>("~estimated_pose_topic" 	    	          , estimated_pose_topic 			              ,"self_localization/pose");
   ros_utils_lib::getPrivateParam<std::string>("~flight_action_topic"		  	            , flight_action_topic    	              	,"actuator_command/flight_action");
   ros_utils_lib::getPrivateParam<std::string>("~status_topic"					                  , status_topic 					                  ,"self_localization/flight_state");
   ros_utils_lib::getPrivateParam<std::string>("~motion_reference_waypoints_path_topic"	, motion_reference_waypoints_path_topic   ,"motion_reference/waypoints");
-  ros_utils_lib::getPrivateParam<std::string>("~battery_topic"	      , battery_topic          ,"sensor_measurement/battery_state");
 
-  pose_sub_ = nh.subscribe("/" + nspace + "/" + estimated_pose_topic ,1,&BehaviorTakeOffWithDF::poseCallback,this);
-  battery_subscriber = nh.subscribe("/" + nspace + "/"+battery_topic, 1, &BehaviorTakeOffWithDF::batteryCallback, this);
-  status_sub = nh.subscribe("/" + nspace + "/"+status_topic, 1, &BehaviorTakeOffWithDF::statusCallBack, this);
+  pose_sub_ = nh.subscribe("/" + nspace + "/" + estimated_pose_topic ,1,&BehaviorLandWithDF::poseCallback,this);
+  status_sub = nh.subscribe("/" + nspace + "/"+status_topic, 1, &BehaviorLandWithDF::statusCallBack, this);
 
   path_references_pub_ = nh.advertise<std_msgs::Float32MultiArray>("/" + nspace + "/" + motion_reference_waypoints_path_topic, 1);
   flight_state_pub = nh.advertise<aerostack_msgs::FlightState>("/" + nspace + "/" + status_topic, 1);
   flight_action_pub = nh.advertise<aerostack_msgs::FlightActionCommand>("/" + nspace + "/" + flight_action_topic, 1);
-  isLow=false;
 }
 
-void BehaviorTakeOffWithDF::onActivate(){
-  
+void BehaviorLandWithDF::onActivate(){
+  lastAltitude = ros::Time::now();
   aerostack_msgs::FlightActionCommand msg;
   msg.header.stamp = ros::Time::now();
-  msg.action = aerostack_msgs::FlightActionCommand::TAKE_OFF;
+  msg.action = aerostack_msgs::FlightActionCommand::LAND;
   flight_action_pub.publish(msg);
 
   activationPosition = position_;
@@ -79,28 +74,29 @@ void BehaviorTakeOffWithDF::onActivate(){
   
 }
 
-void BehaviorTakeOffWithDF::onDeactivate(){
+void BehaviorLandWithDF::onDeactivate(){
   aerostack_msgs::FlightActionCommand msg;
   msg.header.stamp = ros::Time::now();
   msg.action = aerostack_msgs::FlightActionCommand::HOVER;
   flight_action_pub.publish(msg);
 }
 
-void BehaviorTakeOffWithDF::onExecute(){
+void BehaviorLandWithDF::onExecute(){
+  //std::cout<<"1"<<std::endl;
   static bool doOnce = true;
   if(doOnce && (ros::Time::now()-t_activacion_).toSec()>1){
-    sendAltitudeSpeedReferences(TAKEOFF_SPEED);
+    sendAltitudeSpeedReferences(LAND_SPEED);
     doOnce = false;
   }
 }
 
-bool BehaviorTakeOffWithDF::checkSituation(){
+bool BehaviorLandWithDF::checkSituation(){
   behavior_execution_manager_msgs::CheckSituation::Response rsp;
-  if (status_msg.state != aerostack_msgs::FlightState::LANDED && status_msg.state != aerostack_msgs::FlightState::UNKNOWN){
-    setErrorMessage("Error: Already flying");
+  if (status_msg.state == aerostack_msgs::FlightState::LANDED){
+    setErrorMessage("Error: Already landed");
     rsp.situation_occurs = false;
-  }else if(isLow){
-    setErrorMessage("Error: Battery low, unable to perform action");
+  }else if(status_msg.state == aerostack_msgs::FlightState::LANDING){
+    setErrorMessage("Error: Already landing");
     rsp.situation_occurs = false;
   }
   else{
@@ -109,17 +105,9 @@ bool BehaviorTakeOffWithDF::checkSituation(){
   return rsp.situation_occurs;
 }
 
-void BehaviorTakeOffWithDF::batteryCallback(const sensor_msgs::BatteryState& battery) {
-	if(battery.percentage * 100 < BATTERY_LOW_THRESHOLD) {
-		isLow=true;
-	}else{
-    isLow=false;
-  }
-}
-
-void BehaviorTakeOffWithDF::checkGoal(){
+void BehaviorLandWithDF::checkGoal(){
   // Check achievement
-	if (checkTakeoff()){
+	if (checkLanding()){
     aerostack_msgs::FlightState msg;
     msg.header.stamp = ros::Time::now();
     msg.state = aerostack_msgs::FlightState::FLYING;
@@ -128,28 +116,51 @@ void BehaviorTakeOffWithDF::checkGoal(){
 	}
 }
 
-void BehaviorTakeOffWithDF::checkProgress(){}
+void BehaviorLandWithDF::checkProgress(){}
 
-void BehaviorTakeOffWithDF::checkProcesses(){}
+void BehaviorLandWithDF::checkProcesses(){}
 
-bool BehaviorTakeOffWithDF::checkTakeoff(){
-	if (position_.z > activationPosition.z+TAKEOFF_ALTITUDE)
-		return true;
+bool BehaviorLandWithDF::checkLanding(){
+  if((ros::Time::now() - lastAltitude).toSec() > 0.1){
+    if (altitudes_list.size()==LAND_CONFIRMATION_SECONDS*10){
+      altitudes_list.pop_front();
+    }
+    altitudes_list.push_back(position_.z);
+    lastAltitude = ros::Time::now();
+  }
+	if (altitudes_list.size()==LAND_CONFIRMATION_SECONDS*10){
+    double avg = 0;
+    std::list<float>::iterator it;
+    float max = *altitudes_list.begin();
+    float min = *altitudes_list.begin();
+    for(it = altitudes_list.begin(); it != altitudes_list.end(); it++){
+      avg += *it;
+      if(*it < min){
+        min = *it;
+      }
+      if(*it > max){
+        max = *it;
+      }
+    }
+    avg /= altitudes_list.size();
+    if((max-min)<LAND_SPEED){
+      BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
+	    return true;
+    }
+  }
 	return false;
 }
 
-void BehaviorTakeOffWithDF::sendAltitudeSpeedReferences(const double& dz_speed , const double takeoff_altitude){
+void BehaviorLandWithDF::sendAltitudeSpeedReferences(const double& dz_speed , const double land_altitude){
   std_msgs::Float32MultiArray path;
-  path.data = {1.0 , TAKEOFF_SPEED, (float)activationPosition.x , (float)activationPosition.y , (float)activationPosition.z+takeoff_altitude, 0.0};
+  path.data = {1.0 , LAND_SPEED, (float)activationPosition.x , (float)activationPosition.y , (float)land_altitude, 0.0};
   path_references_pub_.publish(path);
 }
 
-
-
-void BehaviorTakeOffWithDF::poseCallback(const geometry_msgs::PoseStamped& _msg){
+void BehaviorLandWithDF::poseCallback(const geometry_msgs::PoseStamped& _msg){
 	position_=_msg.pose.position;
 }
 
-void BehaviorTakeOffWithDF::statusCallBack(const aerostack_msgs::FlightState &msg){
+void BehaviorLandWithDF::statusCallBack(const aerostack_msgs::FlightState &msg){
   status_msg = msg;
 }

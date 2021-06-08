@@ -1,7 +1,7 @@
 /*!********************************************************************************
  * \brief     follow_path implementation
- * \authors   Alberto Rodelgo
- * \copyright Copyright (c) 2020 Universidad Politecnica de Madrid
+ * \authors   Pablo Santamaria
+ * \copyright Copyright (c) 2021 Universidad Politecnica de Madrid
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:

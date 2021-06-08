@@ -60,6 +60,7 @@
 
        <node name="behavior_quadrotor_df_motion_control" pkg="quadrotor_motion_with_df_control"  type="BehaviorQuadrotorDFMotionControl"  output="screen"/>
        <node name="behavior_take_off_with_df" pkg="quadrotor_motion_with_df_control"  type="BehaviorTakeOffWithDF"  output="screen"/>
+       <node name="behavior_land_with_df" pkg="quadrotor_motion_with_df_control"  type="BehaviorLandWithDF"  output="screen"/>
        <node name="behavior_follow_path_with_df" pkg="quadrotor_motion_with_df_control"  type="BehaviorFollowPathWithDF"  output="screen"/>
        <node name="behavior_send_path" pkg="quadrotor_motion_with_df_control"  type="BehaviorSendPath"  output="screen"/>
           
