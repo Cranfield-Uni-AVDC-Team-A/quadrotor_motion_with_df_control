@@ -1,8 +1,8 @@
 /*!********************************************************************************
- * \brief     Take off behavior implementation 
+ * \brief     Send path behavior implementation 
  * \authors   Pablo Santamaria
  *            Miguel Fernandez Cortizas
- * \copyright Copyright (c) 2020 Universidad Politecnica de Madrid
+ * \copyright Copyright (c) 2021 Universidad Politecnica de Madrid
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -78,9 +78,7 @@ void BehaviorSendPath::onActivate(){
   reference_path.header.stamp = ros::Time::now();
   motion_reference_path_pub.publish(reference_path);
   std::cout<<"NEW PATH SENDED"<<std::endl;
-  ros::Duration(0.5).sleep();
-  // BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
-
+  BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
 }
 
 void BehaviorSendPath::onDeactivate(){
@@ -90,14 +88,10 @@ void BehaviorSendPath::onExecute(){
 }
 
 bool BehaviorSendPath::checkSituation(){
-  ros::Duration(0.5).sleep();
-  BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
   return true;
 }
 
 void BehaviorSendPath::checkGoal(){
-  ros::Duration(0.5).sleep();
-  BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
 }
 
 void BehaviorSendPath::checkProgress(){

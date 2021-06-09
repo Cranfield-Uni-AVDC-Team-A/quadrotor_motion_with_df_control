@@ -1,7 +1,7 @@
 /*!********************************************************************************
- * \brief     Take off behavior implementation 
+ * \brief     take_off behavior implementation 
  * \authors   Pablo Santamaria
- * \copyright Copyright (c) 2020 Universidad Politecnica de Madrid
+ * \copyright Copyright (c) 2021 Universidad Politecnica de Madrid
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -106,10 +106,7 @@ private:
   void checkProgress();
   void checkProcesses();
 
-  void checkDroneState();
-  bool enableDroneControl(const int& mode);
   bool checkTakeoff();
-  bool checkLanding();
   void sendAltitudeSpeedReferences(const double& dz_speed , const double takeoff_altitude = TAKEOFF_ALTITUDE);
 
 public: // Callbacks

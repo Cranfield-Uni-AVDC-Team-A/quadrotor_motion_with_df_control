@@ -1,8 +1,7 @@
 /*!********************************************************************************
  * \brief     follow_path implementation
  * \authors   Pablo Santamaria
- *            Miguel Fernandez Cortizas
- * \copyright Copyright (c) 2020 Universidad Politecnica de Madrid
+ * \copyright Copyright (c) 2021 Universidad Politecnica de Madrid
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:

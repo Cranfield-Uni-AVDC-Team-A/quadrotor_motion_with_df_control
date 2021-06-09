@@ -1,5 +1,5 @@
 /*!********************************************************************************
- * \brief     quadrotor_df_motion_control implementation
+ * \brief     land behavior implementation 
  * \authors   Pablo Santamaria
  * \copyright Copyright (c) 2021 Universidad Politecnica de Madrid
  *
@@ -28,40 +28,65 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
-#ifndef KEEP_HOVERING_DF_CONTROL_H
-#define KEEP_HOVERING_DF_CONTROL_H
+#ifndef LAND_WITH_DF_H
+#define LAND_WITH_DF_H
 
-// System
-#include <string>
-#include "math.h"
 // ROS
-#include "std_srvs/Empty.h"
+#include "std_msgs/Float32MultiArray.h"
+#include <geometry_msgs/PoseStamped.h>
 #include <ros/ros.h>
-#include <iostream>
-#include <fstream>
+
 // Aerostack msgs
 #include <behavior_execution_manager_msgs/BehaviorActivationFinished.h>
 #include <aerostack_msgs/FlightActionCommand.h>
-#include "aerostack_msgs/FlightState.h"
-#include <geometry_msgs/TwistStamped.h>
-#include <geometry_msgs/PoseStamped.h>
-#include "mav_msgs/RollPitchYawrateThrust.h"
-#include <behavior_execution_manager_msgs/BehaviorActivationFinished.h>
+#include <sensor_msgs/BatteryState.h>
+#include <aerostack_msgs/FlightState.h>
 
 // Aerostack libraries
 #include <BehaviorExecutionManager.h>
-#include "aerostack_msgs/SetControlMode.h"
+#include "ros_utils_lib/ros_utils.hpp"
+#include "ros_utils_lib/control_utils.hpp"
 
-class BehaviorQuadrotorDFMotionControl : public BehaviorExecutionManager
+#define LAND_ALTITUDE -5.0f
+#define LAND_SPEED 0.1f
+#define LAND_CONFIRMATION_SECONDS 2.0f
+
+class BehaviorLandWithDF : public BehaviorExecutionManager
 {
   // Constructor
 public:
-  BehaviorQuadrotorDFMotionControl();
-  ~BehaviorQuadrotorDFMotionControl();
+  BehaviorLandWithDF();
+  ~BehaviorLandWithDF();
+  int main(int argc, char** argv);
 
 private:
-  ros::NodeHandle node_handle;
+  
+  ros::NodeHandle nh;
   std::string nspace;
+
+  // Config variables
+	std::string estimated_pose_topic;
+	std::string flight_action_topic;
+	std::string status_topic;
+	std::string motion_reference_waypoints_path_topic;
+
+  ros::Time t_activacion_;
+  ros::Time lastAltitude;
+  std::list<float> altitudes_list;
+
+  // Communication variables
+  ros::Subscriber status_sub;
+  ros::Publisher flight_action_pub;
+  ros::Subscriber pose_sub_;
+  ros::Subscriber speeds_sub_;
+  ros::Subscriber flight_action_sub;
+  ros::Publisher path_references_pub_;
+  ros::Publisher flight_state_pub;
+
+  // Messages
+  aerostack_msgs::FlightState status_msg;
+  geometry_msgs::Point position_;
+  geometry_msgs::Point activationPosition;
 
 private:
   // BehaviorExecutionManager
@@ -73,6 +98,14 @@ private:
   void checkGoal();
   void checkProgress();
   void checkProcesses();
+
+  bool checkLanding();
+  void sendAltitudeSpeedReferences(const double& dz_speed , const double land_altitude = LAND_ALTITUDE);
+
+public: // Callbacks
+  void statusCallBack(const aerostack_msgs::FlightState &msg);
+  void poseCallback(const geometry_msgs::PoseStamped&);
+  void flightActionCallback(const aerostack_msgs::FlightActionCommand& _msg);
 };
 
 #endif

@@ -19,6 +19,7 @@ set(QUADROTOR_MOTION_WITH_DF_CONTROL_INCLUDE_DIR
 set(QUADROTOR_MOTION_WITH_DF_CONTROL_HEADER_FILES
         ${QUADROTOR_MOTION_WITH_DF_CONTROL_INCLUDE_DIR}/behavior_quadrotor_df_motion_control.h
         ${QUADROTOR_MOTION_WITH_DF_CONTROL_INCLUDE_DIR}/behavior_take_off_with_df.h
+        ${QUADROTOR_MOTION_WITH_DF_CONTROL_INCLUDE_DIR}/behavior_land_with_df.h
         ${QUADROTOR_MOTION_WITH_DF_CONTROL_INCLUDE_DIR}/behavior_follow_path_with_df.h
         ${QUADROTOR_MOTION_WITH_DF_CONTROL_INCLUDE_DIR}/behavior_send_path.h
 )
@@ -26,6 +27,7 @@ set(QUADROTOR_MOTION_WITH_DF_CONTROL_HEADER_FILES
 set(QUADROTOR_MOTION_WITH_DF_CONTROL_SOURCE_FILES
         ${QUADROTOR_MOTION_WITH_DF_CONTROL_SOURCE_DIR}/behavior_quadrotor_df_motion_control.cpp
         ${QUADROTOR_MOTION_WITH_DF_CONTROL_SOURCE_DIR}/behavior_take_off_with_df.cpp
+        ${QUADROTOR_MOTION_WITH_DF_CONTROL_SOURCE_DIR}/behavior_land_with_df.cpp
         ${QUADROTOR_MOTION_WITH_DF_CONTROL_SOURCE_DIR}/behavior_follow_path_with_df.cpp
         ${QUADROTOR_MOTION_WITH_DF_CONTROL_SOURCE_DIR}/behavior_send_path.cpp
 )
@@ -84,6 +86,9 @@ target_link_libraries(BehaviorQuadrotorDFMotionControl yaml-cpp)
 add_executable(BehaviorTakeOffWithDF ${QUADROTOR_MOTION_WITH_DF_CONTROL_SOURCE_DIR}/behavior_take_off_with_df.cpp)
 target_link_libraries(BehaviorTakeOffWithDF ${catkin_LIBRARIES})
 target_link_libraries(BehaviorTakeOffWithDF yaml-cpp)
+add_executable(BehaviorLandWithDF ${QUADROTOR_MOTION_WITH_DF_CONTROL_SOURCE_DIR}/behavior_land_with_df.cpp)
+target_link_libraries(BehaviorLandWithDF ${catkin_LIBRARIES})
+target_link_libraries(BehaviorLandWithDF yaml-cpp)
 add_executable(BehaviorFollowPathWithDF ${QUADROTOR_MOTION_WITH_DF_CONTROL_SOURCE_DIR}/behavior_follow_path_with_df.cpp)
 target_link_libraries(BehaviorFollowPathWithDF ${catkin_LIBRARIES})
 target_link_libraries(BehaviorFollowPathWithDF yaml-cpp)
@@ -95,6 +100,7 @@ target_link_libraries(BehaviorSendPath yaml-cpp)
 if(catkin_EXPORTED_LIBRARIES)
   add_dependencies(BehaviorQuadrotorDFMotionControl ${catkin_EXPORTED_LIBRARIES})
   add_dependencies(BehaviorTakeOffWithDF ${catkin_EXPORTED_LIBRARIES})
+  add_dependencies(BehaviorLandWithDF ${catkin_EXPORTED_LIBRARIES})
   add_dependencies(BehaviorFollowPathWithDF ${catkin_EXPORTED_LIBRARIES})
   add_dependencies(BehaviorSendPath ${catkin_EXPORTED_LIBRARIES})
 endif()
