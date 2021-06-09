@@ -54,9 +54,11 @@ void BehaviorLandWithDF::onConfigure(){
   ros_utils_lib::getPrivateParam<std::string>("~flight_action_topic"		  	            , flight_action_topic    	              	,"actuator_command/flight_action");
   ros_utils_lib::getPrivateParam<std::string>("~status_topic"					                  , status_topic 					                  ,"self_localization/flight_state");
   ros_utils_lib::getPrivateParam<std::string>("~motion_reference_waypoints_path_topic"	, motion_reference_waypoints_path_topic   ,"motion_reference/waypoints");
+  ros_utils_lib::getPrivateParam<std::string>("~actuator_command_thrust_topic"          , actuator_command_thrust_topic           ,"actuator_command/thrust");
 
   pose_sub_ = nh.subscribe("/" + nspace + "/" + estimated_pose_topic ,1,&BehaviorLandWithDF::poseCallback,this);
   status_sub = nh.subscribe("/" + nspace + "/"+status_topic, 1, &BehaviorLandWithDF::statusCallBack, this);
+  thrust_sub = nh.subscribe("/" + nspace + "/" + actuator_command_thrust_topic, 1, &BehaviorLandWithDF::thrustCallBack, this);
 
   path_references_pub_ = nh.advertise<std_msgs::Float32MultiArray>("/" + nspace + "/" + motion_reference_waypoints_path_topic, 1);
   flight_state_pub = nh.advertise<aerostack_msgs::FlightState>("/" + nspace + "/" + status_topic, 1);
@@ -71,24 +73,15 @@ void BehaviorLandWithDF::onActivate(){
   flight_action_pub.publish(msg);
 
   activationPosition = position_;
+  activationThrust = thrust_;
   t_activacion_ = ros::Time::now();
-  
+  sendAltitudeSpeedReferences(LAND_SPEED,land_altitude);
 }
 
 void BehaviorLandWithDF::onDeactivate(){
-  aerostack_msgs::FlightActionCommand msg;
-  msg.header.stamp = ros::Time::now();
-  msg.action = aerostack_msgs::FlightActionCommand::HOVER;
-  flight_action_pub.publish(msg);
 }
 
 void BehaviorLandWithDF::onExecute(){
-  //std::cout<<"1"<<std::endl;
-  static bool doOnce = true;
-  if(doOnce && (ros::Time::now()-t_activacion_).toSec()>1){
-    sendAltitudeSpeedReferences(LAND_SPEED);
-    doOnce = false;
-  }
 }
 
 bool BehaviorLandWithDF::checkSituation(){
@@ -111,7 +104,7 @@ void BehaviorLandWithDF::checkGoal(){
 	if (checkLanding()){
     aerostack_msgs::FlightState msg;
     msg.header.stamp = ros::Time::now();
-    msg.state = aerostack_msgs::FlightState::FLYING;
+    msg.state = aerostack_msgs::FlightState::LANDED;
     flight_state_pub.publish(msg);
     BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
 	}
@@ -131,28 +124,37 @@ bool BehaviorLandWithDF::checkLanding(){
   }
 	if (altitudes_list.size()==LAND_CONFIRMATION_SECONDS*10){
     double avg = 0;
+    double var = 0;
+    double squared_sum = 0;
     std::list<float>::iterator it;
-    float max = *altitudes_list.begin();
-    float min = *altitudes_list.begin();
     for(it = altitudes_list.begin(); it != altitudes_list.end(); it++){
       avg += *it;
-      if(*it < min){
-        min = *it;
-      }
-      if(*it > max){
-        max = *it;
-      }
+      squared_sum += (*it)*(*it);
     }
     avg /= altitudes_list.size();
-    if((max-min)<LAND_SPEED){
-      BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
+    var = (squared_sum/altitudes_list.size())-(avg*avg);
+    if(sqrt(var)<LAND_SPEED && confirmed_movement){
+      altitudes_list.empty();
+      confirmed_movement = false;
 	    return true;
     }
+    else if (sqrt(var)<LAND_SPEED && activationThrust/4>thrust_){
+      altitudes_list.empty();
+      confirmed_movement = false;
+	    return true;
+    }
+    if(sqrt(var)>LAND_SPEED && (*altitudes_list.begin()-*altitudes_list.end())>LAND_SPEED){
+      confirmed_movement = true;
+    }
+  }
+  if (position_.z < land_altitude || abs(position_.z - land_altitude)*LAND_SPEED < LAND_CONFIRMATION_SECONDS*LAND_SPEED){
+    land_altitude -= 5;
+    sendAltitudeSpeedReferences(LAND_SPEED,land_altitude);
   }
 	return false;
 }
 
-void BehaviorLandWithDF::sendAltitudeSpeedReferences(const double& dz_speed , const double land_altitude){
+void BehaviorLandWithDF::sendAltitudeSpeedReferences(const double& dz_speed , const double& land_altitude){
   std_msgs::Float32MultiArray path;
   path.data = {1.0 , LAND_SPEED, (float)activationPosition.x , (float)activationPosition.y , (float)land_altitude, 0.0};
   path_references_pub_.publish(path);
@@ -164,4 +166,9 @@ void BehaviorLandWithDF::poseCallback(const geometry_msgs::PoseStamped& _msg){
 
 void BehaviorLandWithDF::statusCallBack(const aerostack_msgs::FlightState &msg){
   status_msg = msg;
+}
+
+
+void BehaviorLandWithDF::thrustCallBack(const mavros_msgs::Thrust& _msg){
+  thrust_ = _msg.thrust;
 }

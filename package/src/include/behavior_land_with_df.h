@@ -32,6 +32,7 @@
 #ifndef LAND_WITH_DF_H
 #define LAND_WITH_DF_H
 
+#include <math.h>
 // ROS
 #include "std_msgs/Float32MultiArray.h"
 #include <geometry_msgs/PoseStamped.h>
@@ -42,13 +43,13 @@
 #include <aerostack_msgs/FlightActionCommand.h>
 #include <sensor_msgs/BatteryState.h>
 #include <aerostack_msgs/FlightState.h>
+#include "mavros_msgs/Thrust.h"
 
 // Aerostack libraries
 #include <BehaviorExecutionManager.h>
 #include "ros_utils_lib/ros_utils.hpp"
 #include "ros_utils_lib/control_utils.hpp"
 
-#define LAND_ALTITUDE -5.0f
 #define LAND_SPEED 0.1f
 #define LAND_CONFIRMATION_SECONDS 2.0f
 
@@ -70,10 +71,14 @@ private:
 	std::string flight_action_topic;
 	std::string status_topic;
 	std::string motion_reference_waypoints_path_topic;
+  std::string actuator_command_thrust_topic;
 
+  double land_altitude = -5.0;
   ros::Time t_activacion_;
   ros::Time lastAltitude;
   std::list<float> altitudes_list;
+  bool confirmed_movement = false;
+  float activationThrust;
 
   // Communication variables
   ros::Subscriber status_sub;
@@ -81,6 +86,7 @@ private:
   ros::Subscriber pose_sub_;
   ros::Subscriber speeds_sub_;
   ros::Subscriber flight_action_sub;
+  ros::Subscriber thrust_sub;
   ros::Publisher path_references_pub_;
   ros::Publisher flight_state_pub;
 
@@ -88,6 +94,7 @@ private:
   aerostack_msgs::FlightState status_msg;
   geometry_msgs::Point position_;
   geometry_msgs::Point activationPosition;
+  float thrust_;
 
 private:
   // BehaviorExecutionManager
@@ -101,12 +108,13 @@ private:
   void checkProcesses();
 
   bool checkLanding();
-  void sendAltitudeSpeedReferences(const double& dz_speed , const double land_altitude = LAND_ALTITUDE);
+  void sendAltitudeSpeedReferences(const double& dz_speed , const double& land_altitude );
 
 public: // Callbacks
   void statusCallBack(const aerostack_msgs::FlightState &msg);
   void poseCallback(const geometry_msgs::PoseStamped&);
   void flightActionCallback(const aerostack_msgs::FlightActionCommand& _msg);
+  void thrustCallBack(const mavros_msgs::Thrust& _msg);
 };
 
 #endif
