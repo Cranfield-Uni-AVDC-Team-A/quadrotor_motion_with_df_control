@@ -1,12 +1,7 @@
 /*!********************************************************************************
  * \brief     take_off behavior implementation 
  * \authors   Pablo Santamaria
-<<<<<<< HEAD
- *            Miguel Fernandez Cortizas
- * \copyright Copyright (c) 2020 Universidad Politecnica de Madrid
-=======
  * \copyright Copyright (c) 2021 Universidad Politecnica de Madrid
->>>>>>> 161ec29526e5c96169fd192582cb720e4cc854f4
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -145,10 +140,9 @@ bool BehaviorTakeOffWithDF::checkTakeoff(){
 
 void BehaviorTakeOffWithDF::sendAltitudeSpeedReferences(const double& dz_speed , const double takeoff_altitude){
   std_msgs::Float32MultiArray path;
-  path.data = {1.0 , TAKEOFF_SPEED, (float)activationPosition.x , (float)activationPosition.y , (float)activationPosition.z+takeoff_altitude, 0.0};
+  path.data = {1.0 , TAKEOFF_SPEED, (float)activationPosition.x , (float)activationPosition.y , (float)activationPosition.z+(float)takeoff_altitude, 0.0};
   path_references_pub_.publish(path);
 }
-
 
 
 void BehaviorTakeOffWithDF::poseCallback(const geometry_msgs::PoseStamped& _msg){
