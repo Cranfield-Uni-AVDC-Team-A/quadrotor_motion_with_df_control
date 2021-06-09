@@ -77,8 +77,8 @@ void BehaviorSendPath::onActivate(){
   reference_path.header.frame_id="odom";
   reference_path.header.stamp = ros::Time::now();
   motion_reference_path_pub.publish(reference_path);
+  sent = true;
   std::cout<<"NEW PATH SENDED"<<std::endl;
-  BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
 }
 
 void BehaviorSendPath::onDeactivate(){
@@ -92,6 +92,10 @@ bool BehaviorSendPath::checkSituation(){
 }
 
 void BehaviorSendPath::checkGoal(){
+  if(sent){
+    sent = false;
+    BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
+  }
 }
 
 void BehaviorSendPath::checkProgress(){

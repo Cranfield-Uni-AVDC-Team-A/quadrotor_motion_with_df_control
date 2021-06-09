@@ -84,9 +84,11 @@ void BehaviorFollowPathWithDF::checkProgress() {
 
 void BehaviorFollowPathWithDF::onActivate(){
  //Subscribers
+  motion_reference_path_sub = node_handle.subscribe("/" + nspace +"/"+ motion_reference_path_topic, 1, &BehaviorFollowPathWithDF::pathCallBack, this);
   path_blocked_sub = node_handle.subscribe("/" + nspace + "/"+path_blocked_topic_str, 1, &BehaviorFollowPathWithDF::pathBlockedCallBack, this);
   //Publishers
   command_high_level_pub = node_handle.advertise<aerostack_msgs::FlightActionCommand>("/" + nspace + "/"+command_high_level_str, 1, true);
+  path_references_pub_ = node_handle.advertise<std_msgs::Float32MultiArray>("/" + nspace + "/" + motion_reference_waypoints_path_topic, 1, true);
 
   path_blocked=false;
 
@@ -95,9 +97,6 @@ void BehaviorFollowPathWithDF::onActivate(){
   high_level_command.action = aerostack_msgs::FlightActionCommand::MOVE;
   command_high_level_pub.publish(high_level_command);
 
-  //Publisher
-  path_references_pub_ = node_handle.advertise<std_msgs::Float32MultiArray>("/" + nspace +"/"+ motion_reference_waypoints_path_topic, 1);
-  motion_reference_path_sub = node_handle.subscribe("/" + nspace +"/"+ motion_reference_path_topic, 1, &BehaviorFollowPathWithDF::pathCallBack, this);
 }
 
 void BehaviorFollowPathWithDF::onDeactivate(){
@@ -105,10 +104,10 @@ void BehaviorFollowPathWithDF::onDeactivate(){
   msg.header.frame_id = "behavior_follow_path";
   msg.action = aerostack_msgs::FlightActionCommand::HOVER;
   command_high_level_pub.publish(msg);
-
-  // command_high_level_pub.shutdown();
-  // path_blocked_sub.shutdown();
-  // path_references_pub_.shutdown();
+  motion_reference_path_sub.shutdown();
+  path_references_pub_.shutdown();
+  command_high_level_pub.shutdown();
+  path_blocked_sub.shutdown();
 }
 
 void BehaviorFollowPathWithDF::checkProcesses() { 
@@ -141,7 +140,5 @@ void BehaviorFollowPathWithDF::pathCallBack(const nav_msgs::Path &msgPath){
     std::cout << x << " , " ;
   }
   std::cout <<" ]" << std::endl;
-  ros::Duration(0.2).sleep();
   path_references_pub_.publish(path);
-  ros::Duration(0.5).sleep();
 }
