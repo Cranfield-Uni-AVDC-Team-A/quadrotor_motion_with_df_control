@@ -1,6 +1,7 @@
 /*!********************************************************************************
  * \brief     Send path behavior implementation 
  * \authors   Pablo Santamaria
+ *            Miguel Fernandez Cortizas
  * \copyright Copyright (c) 2021 Universidad Politecnica de Madrid
  *
  * Redistribution and use in source and binary forms, with or without

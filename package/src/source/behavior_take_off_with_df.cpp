@@ -141,7 +141,7 @@ bool BehaviorTakeOffWithDF::checkTakeoff(){
 
 void BehaviorTakeOffWithDF::sendAltitudeSpeedReferences(const double& dz_speed , const double takeoff_altitude){
   std_msgs::Float32MultiArray path;
-  path.data = {1.0 , TAKEOFF_SPEED, (float)activationPosition.x , (float)activationPosition.y , (float)activationPosition.z+(float)takeoff_altitude, 0.0};
+  path.data = {1.0 , TAKEOFF_SPEED, (float)activationPosition.x+0.1f , (float)activationPosition.y , (float)activationPosition.z+(float)takeoff_altitude, 0.0};
   path_references_pub_.publish(path);
 }
 

@@ -129,6 +129,34 @@ void PD_controller::computeActions(){
 
     F_des  = -Kp_lin_mat * e_p - Ki_lin_mat * accum_error_ -Kd_lin_mat * e_v + (mass*g) * Eigen::Vector3d(0,0,1) + mass * rddot_t;
     // F_des  = -Kp_lin_mat * e_p - Kd_lin_mat * e_v + (mass*g) * Eigen::Vector3d(0,0,1) + mass * rddot_t;
+    // #if SATURATE_YAW_ERROR == 1
+    //     #define YAW_SATURATION (M_PI*0.25f)
+    
+    //     float yaw_error = refs_[3][0] - state_.rot[2];
+    //     std::cout <<"ref_in= "<<refs_[3][0] << std::endl;
+    //     std::cout <<"angle= "<<state_.rot[2] << std::endl;
+        
+    //     std::cout <<"yaw_error= "<<yaw_error << std::endl;
+        
+    
+    //     if (yaw_error > M_PI) yaw_error = 2*M_PI - yaw_error ;        
+    //     else if (yaw_error < - M_PI) yaw_error = -(2*M_PI + yaw_error);
+
+    //     if (fabs(yaw_error) > YAW_SATURATION) {
+    //         if (yaw_error > 0) { 
+    //             refs_[3][0] = state_.rot[3] - YAW_SATURATION;
+    //             std::cout <<"YAW_SATURATION"<< std::endl;
+    //         }
+    //         else {
+    //             refs_[3][0] = state_.rot[3] - YAW_SATURATION;
+    //             std::cout <<"YAW_SATURATION"<< std::endl;
+    //         }
+    //         while (refs_[3][0] > 2*M_PI) refs_[3][0] = refs_[3][0]-2*M_PI;
+    //         while (refs_[3][0] < 0) refs_[3][0] = 2*M_PI - refs_[3][0];
+    //     }
+        
+    // #endif
+    // std::cout <<"ref_out= "<<refs_[3][0] << std::endl;
 
     Vector3d zb_des = F_des.normalized();
     Vector3d xc_des(cos(refs_[3][0]),sin(refs_[3][0]),0);

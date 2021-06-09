@@ -70,6 +70,7 @@
 #define DEBUG 0
 #define LINEARIZATION 0
 #define DYNAMIC_TUNING
+#define SATURATE_YAW_ERROR 1 
 
 using Vector3d = Eigen::Vector3d;
 

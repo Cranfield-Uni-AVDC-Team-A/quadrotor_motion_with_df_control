@@ -20,6 +20,8 @@ ETHSplineGenerator::ETHSplineGenerator(TrajGeneratorOptimizator type) :type_(typ
     constraints_.omega_yaw_max = M_PI / 2.0f;
     constraints_.acc_yaw_max   = M_PI;
     begin_time_=ros::Time::now();
+    static ros::NodeHandle nh;
+    static ros::Subscriber sub_pose = nh.subscribe("/drone1/self_localization/pose",1,&ETHSplineGenerator::poseCallback,this);
 };
 
 
@@ -28,18 +30,25 @@ ETHSplineGenerator::~ETHSplineGenerator(){
 };
 
 
+
 void ETHSplineGenerator::genTraj(const std::vector<std::vector<float>>& waypoints, float speed , const std::vector<float>& actual_speed_acc)
 {
 
     ros::Time t_i  = ros::Time::now(); 
+    yaw_measured_ = waypoints[3][0];
+    std::cout << "initial yaw" << waypoints[3][0]<<std::endl;
+    
 
  // Waypoints[i][j] =>> i: (x,y,z,yaw) j:(waypoint_j)
 
     int n_points = waypoints[0].size();
     
     std::vector<mav_trajectory_generation::Vertex> vertices(n_points,dimension_);
-    vertices[0].addConstraint(mav_trajectory_generation::derivative_order::VELOCITY, Eigen::Vector3d(actual_speed_acc[0],actual_speed_acc[1],actual_speed_acc[2]));
-    vertices[0].addConstraint(mav_trajectory_generation::derivative_order::ACCELERATION, Eigen::Vector3d(actual_speed_acc[3],actual_speed_acc[4],actual_speed_acc[5]));
+    // vertices[0].addConstraint(mav_trajectory_generation::derivative_order::VELOCITY, Eigen::Vector3d(actual_speed_acc[0],actual_speed_acc[1],actual_speed_acc[2]));
+    vertices[0].addConstraint(mav_trajectory_generation::derivative_order::VELOCITY, Eigen::Vector3d(0,0,0));
+    // vertices[0].addConstraint(mav_trajectory_generation::derivative_order::ACCELERATION, Eigen::Vector3d(actual_speed_acc[3],actual_speed_acc[4],actual_speed_acc[5]));
+    vertices[0].addConstraint(mav_trajectory_generation::derivative_order::ACCELERATION, Eigen::Vector3d(0,0,0));
+
 
     
     for (int i=0;i < n_points;i++){
@@ -91,7 +100,7 @@ void ETHSplineGenerator::genTraj(const std::vector<std::vector<float>>& waypoint
         mav_trajectory_generation::PolynomialOptimizationNonLinear<N> opt(dimension_,parameters);
         opt.setupFromVertices(vertices, segment_times, derivative_to_optimize_);
         opt.addMaximumMagnitudeConstraint(mav_trajectory_generation::derivative_order::VELOCITY, v_max);
-        // opt.addMaximumMagnitudeConstraint(mav_trajectory_generation::derivative_order::ACCELERATION, 2*9.81f);
+        opt.addMaximumMagnitudeConstraint(mav_trajectory_generation::derivative_order::ACCELERATION, a_max_);
         opt.optimize();
         opt.getPolynomialOptimizationRef().getSegments(&segments);
         opt.getTrajectory((mav_trajectory_generation::Trajectory *)trajectory.get());
@@ -101,7 +110,7 @@ void ETHSplineGenerator::genTraj(const std::vector<std::vector<float>>& waypoint
     trajectory_mutex_.lock();
     traj_ptr_ = std::move(trajectory);
     endTime_ = traj_ptr_->getMaxTime();
-    delay_t_ = (ros::Time::now()- t_i).toSec() + 0.0f;
+    delay_t_assigned = false;
     trajectory_generated_=true;
     trajectory_mutex_.unlock();
     
@@ -115,6 +124,31 @@ void ETHSplineGenerator::genTraj(const std::vector<std::vector<float>>& waypoint
     // return checkTrajectoryFeasibility();
 
 }
+void ETHSplineGenerator::poseCallback(const geometry_msgs::PoseStamped& msg){
+    actual_pos_[0] = msg.pose.position.x; 
+    actual_pos_[1] = msg.pose.position.y; 
+    actual_pos_[2] = msg.pose.position.z; 
+}
+
+float locateDroneInTraj(Eigen::Vector3d actual_pos,const mav_trajectory_generation::Trajectory * trajectory ,float offset = 0.0f){
+    const float step = 0.1;
+    float dist = 0.0f;
+    float min_dist = (actual_pos - trajectory->evaluate(0.0f)).norm(); 
+    float delay_time = 0.0f;
+    #define MAX_EVALUATION_TIME 10
+    float evaluation_time = (trajectory->getMaxTime()<MAX_EVALUATION_TIME)?trajectory->getMaxTime():MAX_EVALUATION_TIME;
+
+    for (float t = step; t < trajectory->getMaxTime();t+= step){
+        dist = (actual_pos - trajectory->evaluate(t)).norm();
+        if ( dist < min_dist){
+            min_dist = dist;
+            delay_time = t;
+        }
+    }
+    return delay_time;
+}
+
+
 
 bool ETHSplineGenerator::generateTrajectory(const std::vector<std::vector<float>>& waypoints, float speed , const std::vector<float>& actual_speed_acc)
 {
@@ -129,7 +163,11 @@ bool ETHSplineGenerator::generateTrajectory(const std::vector<std::vector<float>
 
 bool ETHSplineGenerator::evaluateTrajectory(float t , std::array<std::array<float,3>,4>& refs){
     trajectory_mutex_.lock();
-
+    if (!delay_t_assigned){
+        delay_t_ = locateDroneInTraj(actual_pos_,traj_ptr_.get());
+        delay_t_assigned = true;
+    }
+    
     if (traj_ptr_ == nullptr){
         std::cout << "no traj jet" << std::endl;
         trajectory_mutex_.unlock();
@@ -173,7 +211,6 @@ bool ETHSplineGenerator::evaluateTrajectory(float t , std::array<std::array<floa
             refs[3][0] = -atan2f((double)refs[0][1],(double)refs[1][1])+M_PI/2.0f;
             // refs[3][0] = 0;
         #endif
-    
         
     }
     trajectory_mutex_.unlock();
