@@ -1,6 +1,7 @@
 /*!********************************************************************************
  * \brief     quadrotor_df_motion_control implementation
  * \authors   Pablo Santamaria
+ *            Miguel Fernandez Cortizas
  * \copyright Copyright (c) 2020 Universidad Politecnica de Madrid
  *
  * Redistribution and use in source and binary forms, with or without

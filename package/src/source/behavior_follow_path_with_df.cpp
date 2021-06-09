@@ -1,6 +1,7 @@
 /*!********************************************************************************
  * \brief     follow_path implementation
- * \authors   Alberto Rodelgo
+ * \authors   Pablo Santamaria
+ *            Miguel Fernandez Cortizas
  * \copyright Copyright (c) 2020 Universidad Politecnica de Madrid
  *
  * Redistribution and use in source and binary forms, with or without
@@ -141,6 +142,7 @@ void BehaviorFollowPathWithDF::pathCallBack(const nav_msgs::Path &msgPath){
     std::cout << x << " , " ;
   }
   std::cout <<" ]" << std::endl;
-  ros::Duration(0.5).sleep();
+  ros::Duration(0.2).sleep();
   path_references_pub_.publish(path);
+  ros::Duration(0.5).sleep();
 }

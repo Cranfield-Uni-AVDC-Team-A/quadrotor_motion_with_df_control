@@ -170,8 +170,8 @@ bool ETHSplineGenerator::evaluateTrajectory(float t , std::array<std::array<floa
         for (int i=0;i<sample.size();i++)refs[i][2]=sample[i];
 
         #ifdef AUTOYAW 
-        //refs[3][0] = -atan2f((double)refs[0][1],(double)refs[1][1])+M_PI/2.0f;
-            refs[3][0] = 0;
+            refs[3][0] = -atan2f((double)refs[0][1],(double)refs[1][1])+M_PI/2.0f;
+            // refs[3][0] = 0;
         #endif
     
         

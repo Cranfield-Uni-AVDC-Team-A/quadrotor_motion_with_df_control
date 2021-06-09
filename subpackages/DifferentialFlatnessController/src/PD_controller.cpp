@@ -71,12 +71,12 @@ void PD_controller::ownSetUp(){
         std::cout << "uav_mass = " << mass << std::endl;    
     #endif
 
-    Kp_lin_ << 4.5,4.5,5.0;
-    Kd_lin_ << 1.0,1.0,2.0;
-    Kp_ang_ << 5.0,5.0,5.0;    
+    Kp_lin_ << 5.0,5.0,6.0;
+    Kd_lin_ << 3.0,3.0,3.0;
+    Kp_ang_ << 5.5,5.5,5.0;    
     
     // Ki_lin_ << 0.0001,0.0001,0.00001;
-    Ki_lin_ << 0.0,0.0,0.001;
+    Ki_lin_ << 0.001,0.001,0.001;
     accum_error_ << 0,0,0;
     
     flags_.traj_generated = false;
@@ -120,7 +120,7 @@ void PD_controller::computeActions(){
 
     // antiwindup
 
-    float antiwindup_cte = 5.0f;
+    float antiwindup_cte = 1.0f;
     for (short j = 0; j<3;j++){
         float antiwindup_value = antiwindup_cte/Ki_lin_[j];
         accum_error_[j] = (accum_error_[j] > antiwindup_value)? antiwindup_value: accum_error_[j];
@@ -295,6 +295,7 @@ void PD_controller::ownRun(){
     {
         Kp_lin_ << config.Kp_x,config.Kp_y,config.Kp_z;
         Kd_lin_ << config.Kd_x,config.Kd_y,config.Kd_z;
+        Ki_lin_ << config.Ki_x,config.Ki_y,config.Ki_z;
         Kp_ang_ << config.Kp_roll,config.Kp_pitch,config.Kp_yaw;    
     }
 #endif

@@ -29,7 +29,7 @@ rostopic pub /drone1/motion_reference/waypoints std_msgs/Float32MultiArray "layo
     size: 0
     stride: 0
   data_offset: 0
-data: [2.0,0.5, 0.5,1.0,2.0,0.0, 1.0,2.0,4.0,0.0]" 
+data: [1.0,0.2, 0.0,0.0,2.0,0.0]" 
 
 
 rostopic pub /drone1/motion_reference/waypoints std_msgs/Float32MultiArray "layout:
@@ -39,6 +39,45 @@ rostopic pub /drone1/motion_reference/waypoints std_msgs/Float32MultiArray "layo
     stride: 0
   data_offset: 0
 data: [5.0,0.1, 0.5,0.5,1.0,0.0,       0.5,-0.5,1.0,0.0,     -0.5,-0.5,1.0,0.0,    -0.5,0.5,1.0,0.0,     0.0,0.0,1.0,0.0]" 
+
+rostopic pub /drone1/motion_reference/waypoints std_msgs/Float32MultiArray "layout:
+  dim:
+  - label: ''
+    size: 0
+    stride: 0
+  data_offset: 0
+data: [5.0,0.1, 1.0,1.0,1.0,0.0,       1.0,-1.0,1.0,0.0,     -1.0,-1.0,1.0,0.0,    -1.0,1.0,1.0,0.0,     0.0,0.0,1.0,0.0]"
+
+
+rostopic pub /drone1/motion_reference/waypoints std_msgs/Float32MultiArray "layout:
+  dim:
+  - label: ''
+    size: 0
+    stride: 0
+  data_offset: 0
+data: [5.0,0.1, -1.0,0.0,1.0,0.0,       -0.5,-0.0,2.0,0.0,     1.0,0.0,2.0,0.0,    2.0,0.0,2.0,0.0,     3.0,0.0,1.0,0.0]"
+
+
+
+
+rostopic pub /drone1/motion_reference/waypoints std_msgs/Float32MultiArray "layout:
+  dim:
+  - label: ''
+    size: 0
+    stride: 0
+  data_offset: 0
+data: [6.0,0.2, 0.2,0.0,1.5,0.0,  1.5,-3.0,1.5,0.0,       0.0,-5.0,1.5,0.0,     -2.5,-3.0,1.5,0.0, -0.2,0.0,1.5,0.0,    0.0,0.0,1.5,0.0]"
+
+
+
+
+rostopic pub /drone1/motion_reference/waypoints std_msgs/Float32MultiArray "layout:
+  dim:
+  - label: ''
+    size: 0
+    stride: 0
+  data_offset: 0
+data: [1.0,0.1, 0.0,0.0,-2.0,0.0]" 
 
 
 rostopic pub /drone1/motion_reference/path nav_msgs/Path "header: 

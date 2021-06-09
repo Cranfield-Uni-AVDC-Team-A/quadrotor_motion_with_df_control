@@ -47,7 +47,6 @@ private:
     TrajectoryGenerator *traj_gen_;
 
     bool is_trajectory_generated_ = false;
-
     ros::Time begin_time_;
     std::string frame_id_ = "odom"; 
     Trajectory_type type_;
@@ -71,8 +70,6 @@ private:
     void CallbackWaypointsTopic(const std_msgs::Float32MultiArray& );
     void CallbackPoseTopic(const geometry_msgs::PoseStamped &pose_msg);
     void CallbackSpeedTopic(const geometry_msgs::TwistStamped &twist_msg);
-
-
 
 };
 
