@@ -50,7 +50,7 @@
 #include "ros_utils_lib/ros_utils.hpp"
 #include "ros_utils_lib/control_utils.hpp"
 
-#define LAND_SPEED 0.1f
+#define LAND_SPEED 0.2f
 #define LAND_CONFIRMATION_SECONDS 2.0f
 
 class BehaviorLandWithDF : public BehaviorExecutionManager
