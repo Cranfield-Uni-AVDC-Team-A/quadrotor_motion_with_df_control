@@ -133,12 +133,12 @@ bool BehaviorLandWithDF::checkLanding(){
     }
     avg /= altitudes_list.size();
     var = (squared_sum/altitudes_list.size())-(avg*avg);
-    if(sqrt(var)<LAND_SPEED && confirmed_movement){
+    /*if(sqrt(var)<LAND_SPEED && confirmed_movement){
       altitudes_list.empty();
       confirmed_movement = false;
 	    return true;
     }
-    else if (sqrt(var)<LAND_SPEED && activationThrust/4>thrust_){
+    else */if (sqrt(var)<LAND_SPEED && activationThrust/4>thrust_){
       altitudes_list.empty();
       confirmed_movement = false;
 	    return true;
