@@ -46,7 +46,7 @@ private :
     // const int derivative_to_optimize_ = mav_trajectory_generation::derivative_order::VELOCITY;
 
     const int dimension_ = 3;
-    const double a_max_ = 1*9.81f;
+    const double a_max_ = 0.5*9.81f;
 
     TrajGeneratorOptimizator type_;
     TrajConstraints constraints_;

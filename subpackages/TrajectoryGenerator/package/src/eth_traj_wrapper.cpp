@@ -67,7 +67,8 @@ void ETHSplineGenerator::genTraj(const std::vector<std::vector<float>>& waypoint
     auto segment_times = mav_trajectory_generation::estimateSegmentTimes(vertices,v_max,a_max_*6);
     #else
     
-    double v_max = speed * 2;
+    double v_max = speed ;
+    // double v_max = speed * 2;
     auto segment_times = mav_trajectory_generation::estimateSegmentTimes(vertices,v_max,a_max_);
     
     #endif
