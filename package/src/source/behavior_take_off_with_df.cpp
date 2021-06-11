@@ -46,7 +46,7 @@ BehaviorTakeOffWithDF::BehaviorTakeOffWithDF() : BehaviorExecutionManager(){
 
 BehaviorTakeOffWithDF::~BehaviorTakeOffWithDF(){}
 
-void BehaviorTakeOffWithDF::onConfigure(){ 
+void BehaviorTakeOffWithDF::onConfigure(){
   nh = getNodeHandle();
   nspace = getNamespace();
 
@@ -69,7 +69,15 @@ void BehaviorTakeOffWithDF::onConfigure(){
 }
 
 void BehaviorTakeOffWithDF::onActivate(){
-  
+  std::string arguments = getParameters();
+  YAML::Node config_file = YAML::Load(arguments);
+  if(config_file["speed"].IsDefined()){
+    take_off_speed = config_file["speed"].as<double>(); 
+  }
+  if(config_file["altitude"].IsDefined()){
+    take_off_altitude = config_file["altitude"].as<double>(); 
+  }
+
   aerostack_msgs::FlightActionCommand msg;
   msg.header.stamp = ros::Time::now();
   msg.action = aerostack_msgs::FlightActionCommand::TAKE_OFF;
@@ -134,7 +142,7 @@ void BehaviorTakeOffWithDF::checkProgress(){}
 void BehaviorTakeOffWithDF::checkProcesses(){}
 
 bool BehaviorTakeOffWithDF::checkTakeoff(){
-	if (position_.z > activationPosition.z+TAKEOFF_ALTITUDE)
+	if (position_.z > activationPosition.z+take_off_altitude)
 		return true;
 	return false;
 }
@@ -145,12 +153,12 @@ void BehaviorTakeOffWithDF::sendAltitudeSpeedReferences(){
   path_point.header.frame_id="odom";
   path_point.pose.position.x = (float)activationPosition.x;
   path_point.pose.position.y = (float)activationPosition.y;
-  path_point.pose.position.z = (float)activationPosition.z+(float)TAKEOFF_ALTITUDE;
+  path_point.pose.position.z = (float)activationPosition.z+(float)take_off_altitude;
   reference_waypoints.poses.emplace_back(path_point);
   reference_waypoints.header.frame_id="odom";
   reference_waypoints.header.stamp = ros::Time::now();
   reference_waypoints.yaw_mode = YAW_MODE;
-  reference_waypoints.max_speed = TAKEOFF_SPEED;
+  reference_waypoints.max_speed = take_off_speed;
   waypoints_references_pub_.publish(reference_waypoints);
 }
 

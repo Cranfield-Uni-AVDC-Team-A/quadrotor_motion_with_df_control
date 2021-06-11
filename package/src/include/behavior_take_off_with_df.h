@@ -34,6 +34,7 @@
 // ROS
 #include <geometry_msgs/PoseStamped.h>
 #include <ros/ros.h>
+#include <yaml-cpp/yaml.h>
 
 // Aerostack msgs
 #include <behavior_execution_manager_msgs/BehaviorActivationFinished.h>
@@ -47,9 +48,7 @@
 #include "ros_utils_lib/ros_utils.hpp"
 #include "ros_utils_lib/control_utils.hpp"
 
-#define TAKEOFF_ALTITUDE 1.0f
-#define YAW_MODE aerostack_msgs::TrajectoryWaypoints::PATH_FACING
-#define TAKEOFF_SPEED 0.1f
+#define YAW_MODE aerostack_msgs::TrajectoryWaypoints::KEEP_YAW
 
 class BehaviorTakeOffWithDF : public BehaviorExecutionManager
 {
@@ -75,6 +74,8 @@ private:
 
   const double BATTERY_LOW_THRESHOLD = 10;
   bool isLow;
+  double take_off_speed = 0.2;
+  double take_off_altitude = 1;
 
   ros::Time t_activacion_;
 

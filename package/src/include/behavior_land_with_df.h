@@ -36,6 +36,7 @@
 // ROS
 #include <geometry_msgs/PoseStamped.h>
 #include <ros/ros.h>
+#include <yaml-cpp/yaml.h>
 
 // Aerostack msgs
 #include <behavior_execution_manager_msgs/BehaviorActivationFinished.h>
@@ -50,8 +51,7 @@
 #include "ros_utils_lib/ros_utils.hpp"
 #include "ros_utils_lib/control_utils.hpp"
 
-#define LAND_SPEED 0.1f
-#define YAW_MODE aerostack_msgs::TrajectoryWaypoints::PATH_FACING
+#define YAW_MODE aerostack_msgs::TrajectoryWaypoints::KEEP_YAW
 #define LAND_CONFIRMATION_SECONDS 2.0f
 
 class BehaviorLandWithDF : public BehaviorExecutionManager
@@ -80,6 +80,7 @@ private:
   std::list<float> altitudes_list;
   bool confirmed_movement = false;
   float activationThrust;
+  double land_speed = 0.2;
 
   // Communication variables
   ros::Subscriber status_sub;

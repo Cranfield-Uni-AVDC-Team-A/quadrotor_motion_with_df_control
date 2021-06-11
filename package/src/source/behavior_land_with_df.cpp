@@ -66,6 +66,12 @@ void BehaviorLandWithDF::onConfigure(){
 }
 
 void BehaviorLandWithDF::onActivate(){
+  std::string arguments = getParameters();
+  YAML::Node config_file = YAML::Load(arguments);
+  if(config_file["speed"].IsDefined()){
+    land_speed = config_file["speed"].as<double>(); 
+  }
+
   lastAltitude = ros::Time::now();
   aerostack_msgs::FlightActionCommand msg;
   msg.header.stamp = ros::Time::now();
@@ -75,7 +81,7 @@ void BehaviorLandWithDF::onActivate(){
   activationPosition = position_;
   activationThrust = thrust_;
   t_activacion_ = ros::Time::now();
-  sendAltitudeSpeedReferences(LAND_SPEED,land_altitude);
+  sendAltitudeSpeedReferences(land_speed,land_altitude);
 }
 
 void BehaviorLandWithDF::onDeactivate(){
@@ -133,23 +139,23 @@ bool BehaviorLandWithDF::checkLanding(){
     }
     avg /= altitudes_list.size();
     var = (squared_sum/altitudes_list.size())-(avg*avg);
-    /*if(sqrt(var)<LAND_SPEED && confirmed_movement){
+    /*if(sqrt(var)<land_speed && confirmed_movement){
       altitudes_list.empty();
       confirmed_movement = false;
 	    return true;
     }
-    else */if (sqrt(var)<LAND_SPEED && activationThrust/4>thrust_){
+    else */if (sqrt(var)<land_speed && activationThrust/4>thrust_){
       altitudes_list.empty();
       confirmed_movement = false;
 	    return true;
     }
-    if(sqrt(var)>LAND_SPEED && (*altitudes_list.begin()-*altitudes_list.end())>LAND_SPEED){
+    if(sqrt(var)>land_speed && (*altitudes_list.begin()-*altitudes_list.end())>land_speed){
       confirmed_movement = true;
     }
   }
-  if (position_.z < land_altitude || abs(position_.z - land_altitude)*LAND_SPEED < LAND_CONFIRMATION_SECONDS*LAND_SPEED){
+  if (position_.z < land_altitude || abs(position_.z - land_altitude)*land_speed < LAND_CONFIRMATION_SECONDS*land_speed){
     land_altitude -= 5;
-    sendAltitudeSpeedReferences(LAND_SPEED,land_altitude);
+    sendAltitudeSpeedReferences(land_speed,land_altitude);
   }
 	return false;
 }
