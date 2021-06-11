@@ -49,13 +49,16 @@ BehaviorSendPath::~BehaviorSendPath(){}
 void BehaviorSendPath::onConfigure(){ 
   nh = getNodeHandle();
   nspace = getNamespace();
-  ros_utils_lib::getPrivateParam<std::string>("~motion_reference_path_topic"	            , motion_reference_path_topic             ,"motion_reference/path");
-  motion_reference_path_pub = nh.advertise<nav_msgs::Path>("/" + nspace + "/" + motion_reference_path_topic, 1, true);
-
+  ros_utils_lib::getPrivateParam<std::string>("~motion_reference_waypoints_path_topic"	  , motion_reference_waypoints_path_topic   ,"motion_reference/waypoints");
+  ros_utils_lib::getPrivateParam<std::string>("~motion_reference_traj_topic"    , motion_reference_traj_topic_,     "motion_reference/trajectory");
+  path_references_pub_ = nh.advertise<aerostack_msgs::TrajectoryWaypoints>("/" + nspace + "/" + motion_reference_waypoints_path_topic, 1, true);
+  traj_sub_ = nh.subscribe("/" + nspace + "/" + motion_reference_traj_topic_, 1, &BehaviorSendPath::CallbackTrajectoryTopic,this);
 }
 
 void BehaviorSendPath::onActivate(){
-  nav_msgs::Path reference_path;
+  int yaw_mode = aerostack_msgs::TrajectoryWaypoints::PATH_FACING;
+  double speed = 1;
+  aerostack_msgs::TrajectoryWaypoints reference_waypoints;
   //Checks if path distance is not too long and argument is defined
   std::string arguments = getParameters();
   YAML::Node config_file = YAML::Load(arguments);
@@ -67,21 +70,30 @@ void BehaviorSendPath::onActivate(){
       path_point.pose.position.x = points[i][0];
       path_point.pose.position.y = points[i][1];
       path_point.pose.position.z = points[i][2];
-      reference_path.poses.emplace_back(path_point);
+      reference_waypoints.poses.emplace_back(path_point);
     }
   }else{
     setErrorMessage("Error: Path is not defined");
     std::cout<<"Error: Path is not defined"<<std::endl;
     return;
   }
-  reference_path.header.frame_id="odom";
-  reference_path.header.stamp = ros::Time::now();
-  motion_reference_path_pub.publish(reference_path);
-  sent = true;
-  std::cout<<"NEW PATH SENDED"<<std::endl;
+  if(config_file["yaw_mode"].IsDefined()){
+    yaw_mode = config_file["yaw_mode"].as<int>(); 
+  }
+  if(config_file["speed"].IsDefined()){
+    speed = config_file["speed"].as<double>(); 
+  }
+
+  reference_waypoints.header.frame_id="odom";
+  reference_waypoints.header.stamp = ros::Time::now();
+  reference_waypoints.yaw_mode = yaw_mode;
+  reference_waypoints.max_speed = speed;
+  path_references_pub_.publish(reference_waypoints);
+  moving = false;
 }
 
 void BehaviorSendPath::onDeactivate(){
+  moving = false;
 }
 
 void BehaviorSendPath::onExecute(){
@@ -92,14 +104,20 @@ bool BehaviorSendPath::checkSituation(){
 }
 
 void BehaviorSendPath::checkGoal(){
-  if(sent){
-    sent = false;
-    BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
-  }
 }
 
 void BehaviorSendPath::checkProgress(){
 }
 
 void BehaviorSendPath::checkProcesses(){
+}
+
+void BehaviorSendPath::CallbackTrajectoryTopic(const trajectory_msgs::JointTrajectoryPoint& traj){
+  if (moving && (traj.velocities[0]==0 && traj.velocities[1]==0 && traj.velocities[2]==0) && (traj.accelerations[0]==0 && traj.accelerations[1]==0 && traj.accelerations[2]==0)){
+    BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
+  }
+  if (!moving && (traj.velocities[0]!=0 && traj.velocities[1]!=0 && traj.velocities[2]!=0) && (traj.accelerations[0]!=0 && traj.accelerations[1]!=0 && traj.accelerations[2]!=0)){
+    moving = true;
+  }
+  
 }

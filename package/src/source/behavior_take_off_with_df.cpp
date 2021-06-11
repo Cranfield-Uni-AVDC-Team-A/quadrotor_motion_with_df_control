@@ -62,7 +62,7 @@ void BehaviorTakeOffWithDF::onConfigure(){
   battery_subscriber = nh.subscribe("/" + nspace + "/"+battery_topic, 1, &BehaviorTakeOffWithDF::batteryCallback, this);
   status_sub = nh.subscribe("/" + nspace + "/"+status_topic, 1, &BehaviorTakeOffWithDF::statusCallBack, this);
 
-  path_references_pub_ = nh.advertise<std_msgs::Float32MultiArray>("/" + nspace + "/" + motion_reference_waypoints_path_topic, 1);
+  waypoints_references_pub_ = nh.advertise<aerostack_msgs::TrajectoryWaypoints>("/" + nspace + "/" + motion_reference_waypoints_path_topic, 1);
   flight_state_pub = nh.advertise<aerostack_msgs::FlightState>("/" + nspace + "/" + status_topic, 1);
   flight_action_pub = nh.advertise<aerostack_msgs::FlightActionCommand>("/" + nspace + "/" + flight_action_topic, 1);
   isLow=false;
@@ -90,7 +90,7 @@ void BehaviorTakeOffWithDF::onDeactivate(){
 void BehaviorTakeOffWithDF::onExecute(){
   static bool doOnce = true;
   if(doOnce && (ros::Time::now()-t_activacion_).toSec()>1){
-    sendAltitudeSpeedReferences(TAKEOFF_SPEED);
+    sendAltitudeSpeedReferences();
     doOnce = false;
   }
 }
@@ -139,12 +139,20 @@ bool BehaviorTakeOffWithDF::checkTakeoff(){
 	return false;
 }
 
-void BehaviorTakeOffWithDF::sendAltitudeSpeedReferences(const double& dz_speed , const double takeoff_altitude){
-  std_msgs::Float32MultiArray path;
-  path.data = {1.0 , TAKEOFF_SPEED, (float)activationPosition.x+0.1f , (float)activationPosition.y , (float)activationPosition.z+(float)takeoff_altitude, 0.0};
-  path_references_pub_.publish(path);
+void BehaviorTakeOffWithDF::sendAltitudeSpeedReferences(){
+  aerostack_msgs::TrajectoryWaypoints reference_waypoints;
+  geometry_msgs::PoseStamped path_point;
+  path_point.header.frame_id="odom";
+  path_point.pose.position.x = (float)activationPosition.x;
+  path_point.pose.position.y = (float)activationPosition.y;
+  path_point.pose.position.z = (float)activationPosition.z+(float)TAKEOFF_ALTITUDE;
+  reference_waypoints.poses.emplace_back(path_point);
+  reference_waypoints.header.frame_id="odom";
+  reference_waypoints.header.stamp = ros::Time::now();
+  reference_waypoints.yaw_mode = YAW_MODE;
+  reference_waypoints.max_speed = TAKEOFF_SPEED;
+  waypoints_references_pub_.publish(reference_waypoints);
 }
-
 
 void BehaviorTakeOffWithDF::poseCallback(const geometry_msgs::PoseStamped& _msg){
 	position_=_msg.pose.position;

@@ -1,7 +1,6 @@
 /*!********************************************************************************
  * \brief     follow_path implementation
  * \authors   Pablo Santamaria
- *            Miguel Fernandez Cortizas
  * \copyright Copyright (c) 2021 Universidad Politecnica de Madrid
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,8 +52,6 @@ void BehaviorFollowPathWithDF::onConfigure(){
   ros_utils_lib::getPrivateParam<std::string>("~controllers_topic"	                      , command_high_level_str                  ,"actuator_command/flight_action");
   ros_utils_lib::getPrivateParam<std::string>("~status_topic"	                            , status_str                              ,"self_localization/flight_state");
   ros_utils_lib::getPrivateParam<std::string>("~path_blocked_topic"	                      , path_blocked_topic_str                  ,"environnment/path_blocked_by_obstacle");
-  ros_utils_lib::getPrivateParam<std::string>("~motion_reference_waypoints_path_topic"	  , motion_reference_waypoints_path_topic   ,"motion_reference/waypoints");
-  ros_utils_lib::getPrivateParam<std::string>("~motion_reference_path_topic"	            , motion_reference_path_topic             ,"motion_reference/path");
 
   //Subscriber
   status_sub = node_handle.subscribe("/" + nspace + "/"+status_str, 1, &BehaviorFollowPathWithDF::statusCallBack, this);
@@ -85,11 +82,9 @@ void BehaviorFollowPathWithDF::checkProgress() {
 
 void BehaviorFollowPathWithDF::onActivate(){
  //Subscribers
-  motion_reference_path_sub = node_handle.subscribe("/" + nspace +"/"+ motion_reference_path_topic, 1, &BehaviorFollowPathWithDF::pathCallBack, this);
   path_blocked_sub = node_handle.subscribe("/" + nspace + "/"+path_blocked_topic_str, 1, &BehaviorFollowPathWithDF::pathBlockedCallBack, this);
   //Publishers
   command_high_level_pub = node_handle.advertise<aerostack_msgs::FlightActionCommand>("/" + nspace + "/"+command_high_level_str, 1, true);
-  path_references_pub_ = node_handle.advertise<std_msgs::Float32MultiArray>("/" + nspace + "/" + motion_reference_waypoints_path_topic, 1, true);
 
   path_blocked=false;
 
@@ -105,8 +100,6 @@ void BehaviorFollowPathWithDF::onDeactivate(){
   msg.header.frame_id = "behavior_follow_path";
   msg.action = aerostack_msgs::FlightActionCommand::HOVER;
   command_high_level_pub.publish(msg);
-  motion_reference_path_sub.shutdown();
-  path_references_pub_.shutdown();
   command_high_level_pub.shutdown();
   path_blocked_sub.shutdown();
 }
@@ -122,24 +115,4 @@ void BehaviorFollowPathWithDF::pathBlockedCallBack(const std_msgs::Bool &msg){
 
 void BehaviorFollowPathWithDF::statusCallBack(const aerostack_msgs::FlightState &msg){
   status_msg = msg;
-}
-
-void BehaviorFollowPathWithDF::pathCallBack(const nav_msgs::Path &msgPath){
-  std::cout << "PATH RECEIVED BY FOLLOW PATH" << std::endl;
-  std_msgs::Float32MultiArray path;
-  path.data.push_back(msgPath.poses.size());
-  path.data.push_back(0.2);
-  for(int i = 0; i<msgPath.poses.size(); i++){
-    path.data.push_back(msgPath.poses[i].pose.position.x);
-    path.data.push_back(msgPath.poses[i].pose.position.y);
-    path.data.push_back(msgPath.poses[i].pose.position.z);
-    path.data.push_back(0.0);
-  }
-
-  std::cout << "PATH: [ " ;
-  for (auto x:path.data){
-    std::cout << x << " , " ;
-  }
-  std::cout <<" ]" << std::endl;
-  path_references_pub_.publish(path);
 }
