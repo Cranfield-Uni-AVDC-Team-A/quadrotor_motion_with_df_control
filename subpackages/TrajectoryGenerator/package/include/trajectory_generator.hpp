@@ -30,7 +30,7 @@ public:
         std::cout<<"VIRTUAL METHOD CALLED WITHOUT MATCHING FUNCTIONS"<<std::endl;
         return false;
     };
-
+    
     virtual bool evaluateTrajectory(float t ,  std::array<std::array<float,3>,4>& refs) = 0;
     float getEndTime() const {return endTime_;}
     virtual ros::Time getBeginTime(){

@@ -1,6 +1,14 @@
 #include "trajectory_publisher.hpp"
 
 
+double extractYawFromQuat(const geometry_msgs::Quaternion& quat){
+    double roll, pitch, yaw;
+    tf::Quaternion q(quat.x, quat.y, quat.z, quat.w);
+    tf::Matrix3x3 R(q);
+    R.getRPY(roll, pitch, yaw);
+    return yaw;
+};
+
 TrajectoryPublisher::TrajectoryPublisher(Trajectory_type type)
     :type_(type)
 {
@@ -64,6 +72,25 @@ void TrajectoryPublisher::publishTrajectory(){
     auto time = ros::Time().now() - traj_gen_->getBeginTime();
     bool publish  = traj_gen_->evaluateTrajectory(time.toSec(),refs);
 
+    switch (yaw_mode_){
+        case aerostack_msgs::TrajectoryWaypoints::KEEP_YAW:{
+            refs[3][0] = begin_traj_yaw_;
+        }
+            break;
+        case aerostack_msgs::TrajectoryWaypoints::PATH_FACING :{
+            refs[3][0] = -atan2f((double)refs[0][1],(double)refs[1][1])+M_PI/2.0f;
+        }
+            break;
+        case aerostack_msgs::TrajectoryWaypoints::GENERATE_YAW_TRAJ :
+            {refs[3][0] = 0.0f;
+            std::cerr << "YAW MODE NOT IMPLEMENTED YET"<<std::endl;}
+            break;
+        
+        default:{
+                std::cerr << "YAW MODE NOT DEFINED"<<std::endl;
+        }
+            break;
+    }
     
     static vector<double> pos(4);
     static vector<double> vel(4);
@@ -74,10 +101,11 @@ void TrajectoryPublisher::publishTrajectory(){
         vel[i] = refs[i][1];
         acc[i] = refs[i][2];
     }
-
+    
     traj_msgs.positions = pos;
     traj_msgs.velocities = vel;
     traj_msgs.accelerations = acc;    
+    traj_msgs.time_from_start = time;    
     
     if (publish){
         traj_pub_.publish(traj_msgs);
@@ -92,7 +120,7 @@ void TrajectoryPublisher::plotTrajectory(float period){
     std::vector<geometry_msgs::PoseStamped> pose_vec;
     nav_msgs::Path traj_path;
     
-    auto current_time = ros::Time::now();
+    ros::Time current_time = ros::Time::now();
     float x,y,z;
     while (!traj_gen_->getTrajectoryGenerated()){
         ros::Duration(0.1).sleep();
@@ -130,38 +158,54 @@ void TrajectoryPublisher::plotTrajectory(float period){
 
 // CALLBACKS
 
-void TrajectoryPublisher::CallbackWaypointsTopic(const std_msgs::Float32MultiArray& waypoints_msg){
+void TrajectoryPublisher::CallbackWaypointsTopic(const aerostack_msgs::TrajectoryWaypoints& waypoints_msg){
+    
     // clean waypoints
+
+    // aerostack_msgs::TrajectoryWaypoints msg;
+    // msg.header.stamp = ros::Time::now();
+    // msg.header.frame_id = "odom";
+    // msg.yaw_mode = waypoints_msg.yaw_mode;
+    // msg.max_speed = waypoints_msg.max_speed;
+
+    // msg.poses.clear();
+    // msg.poses.reserve(waypoints_msg.poses.size()+1);
+    // for (auto& elem:waypoints_msg.poses){
+    //     msg.poses.emplace_back(elem);
+    // }
 
     std::vector<float> waypoints_x;
     std::vector<float> waypoints_y;
     std::vector<float> waypoints_z;
     std::vector<float> waypoints_yaw;
 
-    auto n_waypoints = (int)waypoints_msg.data[0];
-    float medium_speed = waypoints_msg.data[1];
+    unsigned int n_waypoints = waypoints_msg.poses.size()+1;
+    float max_speed = waypoints_msg.max_speed;
+    yaw_mode_ = waypoints_msg.yaw_mode;
+    frame_id_ = waypoints_msg.header.frame_id;
      
-    if (medium_speed <= 0.0)throw std::out_of_range("speed must be > 0.0 m/s");
+    if (max_speed <= 0.0)throw std::out_of_range("speed must be > 0.0 m/s");
 
-    waypoints_x.reserve(n_waypoints+1);
-    waypoints_y.reserve(n_waypoints+1);
-    waypoints_z.reserve(n_waypoints+1);
-    waypoints_yaw.reserve(n_waypoints+1);
+    waypoints_x.reserve(n_waypoints);
+    waypoints_y.reserve(n_waypoints);
+    waypoints_z.reserve(n_waypoints);
+    waypoints_yaw.reserve(n_waypoints);
 
     //add actual position to path
-    // if (!(type_ == Trajectory_type::eth_spline_linear  || type_ == Trajectory_type::eth_spline_non_linear)){
-
+    
     waypoints_x.emplace_back(actual_pose_[0]);
     waypoints_y.emplace_back(actual_pose_[1]);
     waypoints_z.emplace_back(actual_pose_[2]);
     waypoints_yaw.emplace_back(actual_pose_[3]);
-    for(int i = 2; i < (n_waypoints*4 + 2);i = i+4){
-        waypoints_x.emplace_back(waypoints_msg.data[i]);
-        waypoints_y.emplace_back(waypoints_msg.data[i+1]);
-        waypoints_z.emplace_back(waypoints_msg.data[i+2]);
-        waypoints_yaw.emplace_back(waypoints_msg.data[i+3]);
+
+    
+
+    for(auto &elem:waypoints_msg.poses){
+        waypoints_x.emplace_back(elem.pose.position.x);
+        waypoints_y.emplace_back(elem.pose.position.y);
+        waypoints_z.emplace_back(elem.pose.position.z);
+        waypoints_yaw.emplace_back(extractYawFromQuat(elem.pose.orientation));
     }
-    n_waypoints+=1;
     
     #if DEBUG_TRAJ == 2
         std::cout << "New checkPoints adquired: \n";
@@ -184,13 +228,15 @@ void TrajectoryPublisher::CallbackWaypointsTopic(const std_msgs::Float32MultiArr
 
     std::vector<std::vector<float>> waypoints = {waypoints_x,waypoints_y,waypoints_z,waypoints_yaw};
     if (type_ == Trajectory_type::eth_spline_linear  || type_ == Trajectory_type::eth_spline_non_linear){
-        is_trajectory_generated_ = traj_gen_->generateTrajectory(waypoints,medium_speed,actual_vel_acc_);
+        is_trajectory_generated_ = traj_gen_->generateTrajectory(waypoints,max_speed,actual_vel_acc_);
     }
     else{   
-        is_trajectory_generated_ = traj_gen_->generateTrajectory(waypoints,medium_speed);
+        is_trajectory_generated_ = traj_gen_->generateTrajectory(waypoints,max_speed);
+        
     }
 
     if (is_trajectory_generated_) {
+        begin_traj_yaw_ = actual_pose_[3];
         begin_time_ = ros::Time::now();
         plotTrajectory(0.2);
     }
@@ -203,12 +249,7 @@ void TrajectoryPublisher::CallbackPoseTopic(const geometry_msgs::PoseStamped &po
     actual_pose_[2] = pose_msg.pose.position.z;
     // std::cout << "actual_pose" << actual_pose_[0] <<", " << actual_pose_[1] <<", " << actual_pose_[2] <<std::endl;
     
-    auto quat = pose_msg.pose.orientation;
-    double roll, pitch, yaw;
-    tf::Quaternion q(quat.x, quat.y, quat.z, quat.w);
-    tf::Matrix3x3 R(q);
-    R.getRPY(roll, pitch, yaw);
-    actual_pose_[3]=yaw;
+    actual_pose_[3]=extractYawFromQuat(pose_msg.pose.orientation);
 }
 
 void TrajectoryPublisher::CallbackSpeedTopic(const geometry_msgs::TwistStamped &twist_msg){

@@ -10,6 +10,7 @@
 #include "trajectory_msgs/JointTrajectoryPoint.h"
 #include <tf/transform_datatypes.h>
 #include <tf2_ros/transform_listener.h>
+#include "aerostack_msgs/TrajectoryWaypoints.h"
 
 #include <iostream>
 #include <vector>
@@ -54,6 +55,9 @@ private:
     std::vector<float> actual_vel_acc_;
     ros::Time last_time_;
 
+    int yaw_mode_=0;
+    float begin_traj_yaw_ = 0.0f;
+
 public:
     
 
@@ -67,7 +71,7 @@ private:
 
     void plotTrajectory(float period);
     void publishTrajectory();
-    void CallbackWaypointsTopic(const std_msgs::Float32MultiArray& );
+    void CallbackWaypointsTopic(const aerostack_msgs::TrajectoryWaypoints& );
     void CallbackPoseTopic(const geometry_msgs::PoseStamped &pose_msg);
     void CallbackSpeedTopic(const geometry_msgs::TwistStamped &twist_msg);
 

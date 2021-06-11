@@ -44,10 +44,19 @@ void ETHSplineGenerator::genTraj(const std::vector<std::vector<float>>& waypoint
     int n_points = waypoints[0].size();
     
     std::vector<mav_trajectory_generation::Vertex> vertices(n_points,dimension_);
-    // vertices[0].addConstraint(mav_trajectory_generation::derivative_order::VELOCITY, Eigen::Vector3d(actual_speed_acc[0],actual_speed_acc[1],actual_speed_acc[2]));
-    vertices[0].addConstraint(mav_trajectory_generation::derivative_order::VELOCITY, Eigen::Vector3d(0,0,0));
-    // vertices[0].addConstraint(mav_trajectory_generation::derivative_order::ACCELERATION, Eigen::Vector3d(actual_speed_acc[3],actual_speed_acc[4],actual_speed_acc[5]));
-    vertices[0].addConstraint(mav_trajectory_generation::derivative_order::ACCELERATION, Eigen::Vector3d(0,0,0));
+    
+    Eigen::Vector3d initial_speed(actual_speed_acc[0],actual_speed_acc[1],actual_speed_acc[2]);
+    Eigen::Vector3d initial_accel(actual_speed_acc[3],actual_speed_acc[4],actual_speed_acc[5]);
+    
+    if (initial_speed.norm() > 0.5){
+        vertices[0].addConstraint(mav_trajectory_generation::derivative_order::VELOCITY, Eigen::Vector3d(actual_speed_acc[0],actual_speed_acc[1],actual_speed_acc[2]));
+        vertices[0].addConstraint(mav_trajectory_generation::derivative_order::ACCELERATION, Eigen::Vector3d(actual_speed_acc[3],actual_speed_acc[4],actual_speed_acc[5]));
+    }else{
+        vertices[0].addConstraint(mav_trajectory_generation::derivative_order::VELOCITY, Eigen::Vector3d(0,0,0));
+        vertices[0].addConstraint(mav_trajectory_generation::derivative_order::ACCELERATION, Eigen::Vector3d(0,0,0));
+    }
+
+    
 
 
     
@@ -74,6 +83,7 @@ void ETHSplineGenerator::genTraj(const std::vector<std::vector<float>>& waypoint
     #endif
 
     const int N = 10;
+    // const int N = 6;
     mav_trajectory_generation::Segment::Vector segments;
 
     std::unique_ptr<mav_trajectory_generation::Trajectory> trajectory (new mav_trajectory_generation::Trajectory ());
@@ -132,7 +142,7 @@ void ETHSplineGenerator::poseCallback(const geometry_msgs::PoseStamped& msg){
 }
 
 float locateDroneInTraj(Eigen::Vector3d actual_pos,const mav_trajectory_generation::Trajectory * trajectory ,float offset = 0.0f){
-    const float step = 0.1;
+    const float step = 0.2;
     float dist = 0.0f;
     float min_dist = (actual_pos - trajectory->evaluate(0.0f)).norm(); 
     float delay_time = 0.0f;
@@ -209,8 +219,8 @@ bool ETHSplineGenerator::evaluateTrajectory(float t , std::array<std::array<floa
         for (int i=0;i<sample.size();i++)refs[i][2]=sample[i];
 
         #ifdef AUTOYAW 
-            refs[3][0] = -atan2f((double)refs[0][1],(double)refs[1][1])+M_PI/2.0f;
-            // refs[3][0] = 0;
+            // refs[3][0] = -atan2f((double)refs[0][1],(double)refs[1][1])+M_PI/2.0f;
+            refs[3][0] = 0;
         #endif
         
     }

@@ -46,7 +46,8 @@ private :
     // const int derivative_to_optimize_ = mav_trajectory_generation::derivative_order::VELOCITY;
 
     const int dimension_ = 3;
-    const double a_max_ = 0.5*9.81f;
+    // const double a_max_ = 0.5*9.81f;
+    const double a_max_ = 2*9.81f;
 
     TrajGeneratorOptimizator type_;
     TrajConstraints constraints_;
@@ -74,7 +75,6 @@ public:
     ETHSplineGenerator(TrajGeneratorOptimizator type);
     ~ETHSplineGenerator();
     void poseCallback(const geometry_msgs::PoseStamped& msg);
-    
 
     bool generateTrajectory(const std::vector<std::vector<float>>& waypoints, float speed){return true;}
     bool generateTrajectory(const std::vector<std::vector<float>>& waypoints, float speed , const std::vector<float>& actual_speed_acc);
