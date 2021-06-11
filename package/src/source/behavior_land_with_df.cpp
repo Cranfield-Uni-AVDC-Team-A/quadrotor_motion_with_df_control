@@ -60,7 +60,7 @@ void BehaviorLandWithDF::onConfigure(){
   status_sub = nh.subscribe("/" + nspace + "/"+status_topic, 1, &BehaviorLandWithDF::statusCallBack, this);
   thrust_sub = nh.subscribe("/" + nspace + "/" + actuator_command_thrust_topic, 1, &BehaviorLandWithDF::thrustCallBack, this);
 
-  path_references_pub_ = nh.advertise<std_msgs::Float32MultiArray>("/" + nspace + "/" + motion_reference_waypoints_path_topic, 1);
+  waypoints_references_pub_ = nh.advertise<aerostack_msgs::TrajectoryWaypoints>("/" + nspace + "/" + motion_reference_waypoints_path_topic, 1);
   flight_state_pub = nh.advertise<aerostack_msgs::FlightState>("/" + nspace + "/" + status_topic, 1);
   flight_action_pub = nh.advertise<aerostack_msgs::FlightActionCommand>("/" + nspace + "/" + flight_action_topic, 1);
 }
@@ -155,9 +155,18 @@ bool BehaviorLandWithDF::checkLanding(){
 }
 
 void BehaviorLandWithDF::sendAltitudeSpeedReferences(const double& dz_speed , const double& land_altitude){
-  std_msgs::Float32MultiArray path;
-  path.data = {1.0 , LAND_SPEED, (float)activationPosition.x , (float)activationPosition.y , (float)land_altitude, 0.0};
-  path_references_pub_.publish(path);
+  aerostack_msgs::TrajectoryWaypoints reference_waypoints;
+  geometry_msgs::PoseStamped path_point;
+  path_point.header.frame_id="odom";
+  path_point.pose.position.x = (float)activationPosition.x;
+  path_point.pose.position.y = (float)activationPosition.y;
+  path_point.pose.position.z =(float)land_altitude;
+  reference_waypoints.poses.emplace_back(path_point);
+  reference_waypoints.header.frame_id="odom";
+  reference_waypoints.header.stamp = ros::Time::now();
+  reference_waypoints.yaw_mode = YAW_MODE;
+  reference_waypoints.max_speed = dz_speed;
+  waypoints_references_pub_.publish(reference_waypoints);
 }
 
 void BehaviorLandWithDF::poseCallback(const geometry_msgs::PoseStamped& _msg){

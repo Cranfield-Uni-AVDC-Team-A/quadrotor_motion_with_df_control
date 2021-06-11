@@ -1,7 +1,6 @@
 /*!********************************************************************************
  * \brief     Send path behavior implementation 
  * \authors   Pablo Santamaria
- *            Miguel Fernandez Cortizas
  * \copyright Copyright (c) 2021 Universidad Politecnica de Madrid
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,10 +35,11 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <ros/ros.h>
 #include <yaml-cpp/yaml.h>
+#include "trajectory_msgs/JointTrajectoryPoint.h"
 
 // Aerostack msgs
 #include <behavior_execution_manager_msgs/BehaviorActivationFinished.h>
-#include <nav_msgs/Path.h>
+#include <aerostack_msgs/TrajectoryWaypoints.h>
 
 // Aerostack libraries
 #include <BehaviorExecutionManager.h>
@@ -59,10 +59,12 @@ private:
   ros::NodeHandle nh;
   std::string nspace;
 
-  bool sent = false;
+  bool moving = false;
 
-  std::string motion_reference_path_topic;
-  ros::Publisher motion_reference_path_pub;
+  std::string motion_reference_waypoints_path_topic;
+  std::string motion_reference_traj_topic_;
+  ros::Publisher path_references_pub_;
+  ros::Subscriber traj_sub_;
 
 private:
   // BehaviorExecutionManager
@@ -75,6 +77,7 @@ private:
   void checkProgress();
   void checkProcesses();
 
+  void CallbackTrajectoryTopic(const trajectory_msgs::JointTrajectoryPoint& traj);
 };
 
 #endif

@@ -34,7 +34,6 @@
 
 #include <math.h>
 // ROS
-#include "std_msgs/Float32MultiArray.h"
 #include <geometry_msgs/PoseStamped.h>
 #include <ros/ros.h>
 
@@ -44,13 +43,15 @@
 #include <sensor_msgs/BatteryState.h>
 #include <aerostack_msgs/FlightState.h>
 #include "mavros_msgs/Thrust.h"
+#include <aerostack_msgs/TrajectoryWaypoints.h>
 
 // Aerostack libraries
 #include <BehaviorExecutionManager.h>
 #include "ros_utils_lib/ros_utils.hpp"
 #include "ros_utils_lib/control_utils.hpp"
 
-#define LAND_SPEED 0.2f
+#define LAND_SPEED 0.1f
+#define YAW_MODE aerostack_msgs::TrajectoryWaypoints::PATH_FACING
 #define LAND_CONFIRMATION_SECONDS 2.0f
 
 class BehaviorLandWithDF : public BehaviorExecutionManager
@@ -87,7 +88,7 @@ private:
   ros::Subscriber speeds_sub_;
   ros::Subscriber flight_action_sub;
   ros::Subscriber thrust_sub;
-  ros::Publisher path_references_pub_;
+  ros::Publisher waypoints_references_pub_;
   ros::Publisher flight_state_pub;
 
   // Messages

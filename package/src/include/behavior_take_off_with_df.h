@@ -1,7 +1,6 @@
 /*!********************************************************************************
  * \brief     take_off behavior implementation 
  * \authors   Pablo Santamaria
- *            Miguel Fernandez Cortizas
  * \copyright Copyright (c) 2021 Universidad Politecnica de Madrid
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,7 +32,6 @@
 #define TAKE_OFF_WITH_DF_H
 
 // ROS
-#include "std_msgs/Float32MultiArray.h"
 #include <geometry_msgs/PoseStamped.h>
 #include <ros/ros.h>
 
@@ -42,6 +40,7 @@
 #include <aerostack_msgs/FlightActionCommand.h>
 #include <sensor_msgs/BatteryState.h>
 #include <aerostack_msgs/FlightState.h>
+#include <aerostack_msgs/TrajectoryWaypoints.h>
 
 // Aerostack libraries
 #include <BehaviorExecutionManager.h>
@@ -49,6 +48,7 @@
 #include "ros_utils_lib/control_utils.hpp"
 
 #define TAKEOFF_ALTITUDE 1.0f
+#define YAW_MODE aerostack_msgs::TrajectoryWaypoints::PATH_FACING
 #define TAKEOFF_SPEED 0.1f
 
 class BehaviorTakeOffWithDF : public BehaviorExecutionManager
@@ -87,7 +87,7 @@ private:
   ros::Subscriber pose_sub_;
   ros::Subscriber speeds_sub_;
   ros::Subscriber flight_action_sub;
-  ros::Publisher path_references_pub_;
+  ros::Publisher waypoints_references_pub_;
   ros::Publisher flight_state_pub;
 
   // Messages
@@ -108,7 +108,7 @@ private:
   void checkProcesses();
 
   bool checkTakeoff();
-  void sendAltitudeSpeedReferences(const double& dz_speed , const double takeoff_altitude = TAKEOFF_ALTITUDE);
+  void sendAltitudeSpeedReferences();
 
 public: // Callbacks
   void statusCallBack(const aerostack_msgs::FlightState &msg);

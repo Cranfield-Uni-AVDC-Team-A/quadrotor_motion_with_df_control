@@ -1,7 +1,6 @@
 /*!********************************************************************************
  * \brief     follow_path implementation
  * \authors   Pablo Santamaria
- *            Miguel Fernandez Cortizas
  * \copyright Copyright (c) 2021 Universidad Politecnica de Madrid
  *
  * Redistribution and use in source and binary forms, with or without
@@ -59,18 +58,14 @@ private:
   std::string command_high_level_str;
   std::string status_str;
   std::string path_blocked_topic_str;
-	std::string motion_reference_waypoints_path_topic;
-  std::string motion_reference_path_topic;
   
   ros::NodeHandle node_handle;
   std::string nspace; 
   // Subscriber
   ros::Subscriber status_sub;
   ros::Subscriber path_blocked_sub;
-  ros::Subscriber motion_reference_path_sub;
   //Publishers
   ros::Publisher command_high_level_pub;
-  ros::Publisher path_references_pub_;
   
 
   // Messages
@@ -94,7 +89,6 @@ public:
 // Callbacks
 void statusCallBack(const aerostack_msgs::FlightState &msg);
 void pathBlockedCallBack(const std_msgs::Bool &msg);
-void pathCallBack(const nav_msgs::Path &msgPath);
 };
 
 #endif
