@@ -78,7 +78,15 @@ void TrajectoryPublisher::publishTrajectory(){
         }
             break;
         case aerostack_msgs::TrajectoryWaypoints::PATH_FACING :{
-            refs[3][0] = -atan2f((double)refs[0][1],(double)refs[1][1])+M_PI/2.0f;
+            static float prev_vx = refs[0][1];
+            static float prev_vy = refs[1][1];
+            if (fabs(refs[0][1]) > 0.01 || (refs[1][1])>0.01){
+                refs[3][0] = -atan2f((double)refs[0][1],(double)refs[1][1])+M_PI/2.0f;
+                prev_vx = refs[0][1];    
+                prev_vy = refs[1][1];    
+            }else{
+                refs[3][0] = -atan2f((double)prev_vx,(double)prev_vy)+M_PI/2.0f;
+            }
         }
             break;
         case aerostack_msgs::TrajectoryWaypoints::GENERATE_YAW_TRAJ :
