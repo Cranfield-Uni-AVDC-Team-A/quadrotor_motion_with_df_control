@@ -142,7 +142,7 @@ void BehaviorTakeOffWithDF::checkProgress(){}
 void BehaviorTakeOffWithDF::checkProcesses(){}
 
 bool BehaviorTakeOffWithDF::checkTakeoff(){
-	if (position_.z > activationPosition.z+take_off_altitude)
+	if (position_.z > activationPosition.z+take_off_altitude-0.05)
 		return true;
 	return false;
 }

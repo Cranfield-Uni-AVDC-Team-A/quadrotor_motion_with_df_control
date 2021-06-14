@@ -60,6 +60,7 @@ private:
   std::string nspace;
 
   bool moving = false;
+  bool new_traj_generated_ = false;
 
   std::string motion_reference_waypoints_path_topic;
   std::string motion_reference_traj_topic_;

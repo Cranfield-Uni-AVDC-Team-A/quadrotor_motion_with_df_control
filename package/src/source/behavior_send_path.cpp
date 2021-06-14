@@ -90,6 +90,7 @@ void BehaviorSendPath::onActivate(){
   reference_waypoints.max_speed = speed;
   path_references_pub_.publish(reference_waypoints);
   moving = false;
+  new_traj_generated_ = false;
 }
 
 void BehaviorSendPath::onDeactivate(){
@@ -113,11 +114,30 @@ void BehaviorSendPath::checkProcesses(){
 }
 
 void BehaviorSendPath::CallbackTrajectoryTopic(const trajectory_msgs::JointTrajectoryPoint& traj){
-  if (moving && (traj.velocities[0]==0 && traj.velocities[1]==0 && traj.velocities[2]==0) && (traj.accelerations[0]==0 && traj.accelerations[1]==0 && traj.accelerations[2]==0)){
-    BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
+  double value = 0.0f;
+  static float previous_time = traj.time_from_start.toSec();
+  if (traj.time_from_start.toSec() - previous_time < -0.001 ){
+    std::cout << "TRAJ GENERATED" <<std::endl;
+    std::cout << "t0:" << traj.time_from_start.toSec() << "  t1:"  << previous_time <<std::endl;
+    new_traj_generated_ = true;  
   }
-  if (!moving && (traj.velocities[0]!=0 && traj.velocities[1]!=0 && traj.velocities[2]!=0) && (traj.accelerations[0]!=0 && traj.accelerations[1]!=0 && traj.accelerations[2]!=0)){
-    moving = true;
-  }
+  if (new_traj_generated_  && traj.time_from_start.toSec() > 0.1){
   
+    for (unsigned short int i =0; i<3; i++ ){
+      value += fabs(traj.velocities[i]);
+      value += fabs(traj.accelerations[i]);
+    }
+
+    if (value == 0.0f){
+      if (moving)
+      {
+        std::cout << "SEND PATH GOAL ACHIEVED" << std::endl;
+        new_traj_generated_ = false;  
+        BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
+      }
+      else moving = true;
+    }
+  }
+  previous_time = traj.time_from_start.toSec();
+    
 }
