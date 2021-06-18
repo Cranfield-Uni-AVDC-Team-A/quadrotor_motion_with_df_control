@@ -80,7 +80,7 @@ private:
   std::list<float> altitudes_list;
   bool confirmed_movement = false;
   float activationThrust;
-  double land_speed = 0.2;
+  double land_speed = 0.3;
 
   // Communication variables
   ros::Subscriber status_sub;
