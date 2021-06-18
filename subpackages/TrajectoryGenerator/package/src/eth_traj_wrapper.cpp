@@ -45,10 +45,11 @@ void ETHSplineGenerator::genTraj(const std::vector<std::vector<float>>& waypoint
     
     std::vector<mav_trajectory_generation::Vertex> vertices(n_points,dimension_);
     
-    Eigen::Vector3d initial_speed(actual_speed_acc[0],actual_speed_acc[1],actual_speed_acc[2]);
-    Eigen::Vector3d initial_accel(actual_speed_acc[3],actual_speed_acc[4],actual_speed_acc[5]);
+    Eigen::Vector3d initial_speed(actual_speed_acc[0],actual_speed_acc[1],0.0f);
+    // Eigen::Vector3d initial_speed(actual_speed_acc[0],actual_speed_acc[1],actual_speed_acc[2]);
+    // Eigen::Vector3d initial_accel(actual_speed_acc[3],actual_speed_acc[4],actual_speed_acc[5]);
     
-    if (initial_speed.norm() > 0.5){
+    if (initial_speed.norm() > 0.2){
         vertices[0].addConstraint(mav_trajectory_generation::derivative_order::VELOCITY, Eigen::Vector3d(actual_speed_acc[0],actual_speed_acc[1],actual_speed_acc[2]));
         vertices[0].addConstraint(mav_trajectory_generation::derivative_order::ACCELERATION, Eigen::Vector3d(actual_speed_acc[3],actual_speed_acc[4],actual_speed_acc[5]));
     }else{
@@ -156,7 +157,7 @@ float locateDroneInTraj(Eigen::Vector3d actual_pos,const mav_trajectory_generati
             delay_time = t;
         }
     }
-    return delay_time;
+    return delay_time + 0.2;
 }
 
 

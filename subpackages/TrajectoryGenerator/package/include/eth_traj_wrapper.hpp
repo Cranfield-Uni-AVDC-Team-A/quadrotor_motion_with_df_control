@@ -47,7 +47,7 @@ private :
 
     const int dimension_ = 3;
     // const double a_max_ = 0.5*9.81f;
-    const double a_max_ = 2*9.81f;
+    const double a_max_ = 1*9.81f;
 
     TrajGeneratorOptimizator type_;
     TrajConstraints constraints_;

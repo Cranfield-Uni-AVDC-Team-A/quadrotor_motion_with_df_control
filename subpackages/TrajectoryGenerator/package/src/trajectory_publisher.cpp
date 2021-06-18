@@ -263,12 +263,17 @@ void TrajectoryPublisher::CallbackPoseTopic(const geometry_msgs::PoseStamped &po
 void TrajectoryPublisher::CallbackSpeedTopic(const geometry_msgs::TwistStamped &twist_msg){
     auto dt = ros::Time::now() - last_time_;
     last_time_ = ros::Time::now();
-
-    actual_vel_acc_[3] = (float) (twist_msg.twist.linear.x - actual_vel_acc_[0])/dt.toSec();
-    actual_vel_acc_[4] = (float) (twist_msg.twist.linear.y - actual_vel_acc_[1])/dt.toSec();
-    actual_vel_acc_[5] = (float) (twist_msg.twist.linear.z - actual_vel_acc_[2])/dt.toSec();
-    actual_vel_acc_[0] = (float) twist_msg.twist.linear.x;
-    actual_vel_acc_[1] = (float) twist_msg.twist.linear.y;
-    actual_vel_acc_[2] = (float) twist_msg.twist.linear.z;
+    static std::vector<float> last_refs(6,0.0f);
+    const float alpha = 0.2;
+    actual_vel_acc_[3] = (float) last_refs[3]*(1-alpha) + alpha * (twist_msg.twist.linear.x - actual_vel_acc_[0])/dt.toSec();
+    actual_vel_acc_[4] = (float) last_refs[4]*(1-alpha) + alpha * (twist_msg.twist.linear.y - actual_vel_acc_[1])/dt.toSec();
+    actual_vel_acc_[5] = (float) last_refs[5]*(1-alpha) + alpha * (twist_msg.twist.linear.z - actual_vel_acc_[2])/dt.toSec();
+    actual_vel_acc_[0] = (float) last_refs[0]*(1-alpha) + alpha * twist_msg.twist.linear.x;
+    actual_vel_acc_[1] = (float) last_refs[1]*(1-alpha) + alpha * twist_msg.twist.linear.y;
+    actual_vel_acc_[2] = (float) last_refs[2]*(1-alpha) + alpha * twist_msg.twist.linear.z; 
+ 
+    for (short int i= 0; i<actual_vel_acc_.size();i++){
+        last_refs[i]=actual_vel_acc_[i];
+    }
     
 }
