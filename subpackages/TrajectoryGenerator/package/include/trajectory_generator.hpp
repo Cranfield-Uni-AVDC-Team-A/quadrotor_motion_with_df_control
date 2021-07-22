@@ -18,7 +18,7 @@ class TrajectoryGenerator{
 
 protected:    
 
-    float endTime_ = 0.0f;
+    float end_time_ = 0.0f;
 
 public:
 
@@ -31,8 +31,8 @@ public:
         return false;
     };
     
-    virtual bool evaluateTrajectory(float t ,  std::array<std::array<float,3>,4>& refs) = 0;
-    float getEndTime() const {return endTime_;}
+    virtual bool evaluateTrajectory(float t ,  std::array<std::array<float,3>,4>& refs, bool for_plot=false) = 0;
+    float getEndTime() const {return end_time_;}
     virtual ros::Time getBeginTime(){
         std::cerr << "calling non implemented method"<< std::endl;
         return ros::Time::now();
@@ -60,7 +60,7 @@ public:
         return beginTime_;
     }
     bool generateTrajectory(const vector<vector<float>>& waypoints, float speed);
-    bool evaluateTrajectory(float t , std::array<std::array<float,3>,4>& refs_);
+    bool evaluateTrajectory(float t , std::array<std::array<float,3>,4>& refs_,bool for_plot=false);
 };
 
 
@@ -73,7 +73,7 @@ public:
     LemniscateGenerator(){};
     ~LemniscateGenerator(){};
     bool generateTrajectory(const vector<vector<float>>& waypoints, float speed);
-    bool evaluateTrajectory(float time ,  std::array<std::array<float,3>,4>& refs_) ;
+    bool evaluateTrajectory(float time ,  std::array<std::array<float,3>,4>& refs_, bool for_plot=false) ;
 
 };
 

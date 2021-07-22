@@ -33,56 +33,65 @@ ETHSplineGenerator::~ETHSplineGenerator(){
 
 void ETHSplineGenerator::genTraj(const std::vector<std::vector<float>>& waypoints, float speed , const std::vector<float>& actual_speed_acc)
 {
-
     ros::Time t_i  = ros::Time::now(); 
     yaw_measured_ = waypoints[3][0];
-    std::cout << "initial yaw" << waypoints[3][0]<<std::endl;
+    std::cout << "initial yaw" << waypoints[3][0]<<std::endl;    
+    trajectory_mutex_.lock();
+    float end_time = end_time_;
+    float last_t_evaluated = last_t_evaluated_;
+    trajectory_mutex_.unlock();
+
+    // Waypoints[i][j] =>> i: (x,y,z,yaw) j:(waypoint_j)
+
     
-
- // Waypoints[i][j] =>> i: (x,y,z,yaw) j:(waypoint_j)
-
+    std::vector<mav_trajectory_generation::Vertex> vertices;
     int n_points = waypoints[0].size();
-    
-    std::vector<mav_trajectory_generation::Vertex> vertices(n_points,dimension_);
-    
-    Eigen::Vector3d initial_speed(actual_speed_acc[0],actual_speed_acc[1],0.0f);
-    // Eigen::Vector3d initial_speed(actual_speed_acc[0],actual_speed_acc[1],actual_speed_acc[2]);
-    // Eigen::Vector3d initial_accel(actual_speed_acc[3],actual_speed_acc[4],actual_speed_acc[5]);
-    
-    if (initial_speed.norm() > 0.2){
-        vertices[0].addConstraint(mav_trajectory_generation::derivative_order::VELOCITY, Eigen::Vector3d(actual_speed_acc[0],actual_speed_acc[1],actual_speed_acc[2]));
-        vertices[0].addConstraint(mav_trajectory_generation::derivative_order::ACCELERATION, Eigen::Vector3d(actual_speed_acc[3],actual_speed_acc[4],actual_speed_acc[5]));
-    }else{
+    const int n_points_added= 2;
+
+    // Check if you must generate trajectory from a previous one or build one from scratch
+    if (end_time -last_t_evaluated < 3*n_points_added*average_trajectory_generation_elapsed_time_ || end_time==0.0f ){
+        std::cout << "GENERATING FROM SRATCH " <<std::endl; 
+        // built it from scratch
+        vertices = std::vector<mav_trajectory_generation::Vertex>(n_points,dimension_);
+        vertices[0].addConstraint(mav_trajectory_generation::derivative_order::POSITION, Eigen::Vector3d(waypoints[0][0],waypoints[1][0],waypoints[2][0]));
         vertices[0].addConstraint(mav_trajectory_generation::derivative_order::VELOCITY, Eigen::Vector3d(0,0,0));
-        vertices[0].addConstraint(mav_trajectory_generation::derivative_order::ACCELERATION, Eigen::Vector3d(0,0,0));
+        vertices[0].addConstraint(mav_trajectory_generation::derivative_order::ACCELERATION, Eigen::Vector3d(0,0,0));   
+    }else{
+        // begin from previous trajectory references for the first 3 points
+        std::cout << "GENERATING FROM PREVIOUS TRAJ " <<std::endl; 
+
+        static std::array<std::array<float,3>,4> refs;
+        const int n_points_added= 2;
+        n_points = n_points + n_points_added-1; // -1 for the previous point that is not added
+        vertices = std::vector<mav_trajectory_generation::Vertex>(n_points,dimension_);
+        for (unsigned short int i = 0 ;i< n_points_added; i++){
+            if (i==0) refs = last_sended_refs_;
+            else {
+                evaluateTrajectory(last_t_evaluated+i*2*average_trajectory_generation_elapsed_time_,refs);
+            }
+            vertices[i].addConstraint(mav_trajectory_generation::derivative_order::POSITION,    Eigen::Vector3d(refs[0][0],
+                                                                                                                refs[1][0],
+                                                                                                                refs[2][0]));
+            vertices[i].addConstraint(mav_trajectory_generation::derivative_order::VELOCITY,    Eigen::Vector3d(refs[0][1],
+                                                                                                                refs[1][1],
+                                                                                                                refs[2][1]));
+            vertices[i].addConstraint(mav_trajectory_generation::derivative_order::ACCELERATION,Eigen::Vector3d(refs[0][2],
+                                                                                                                refs[1][2],
+                                                                                                                refs[2][2]));
+        }
     }
 
-    
-
-
-    
-    for (int i=0;i < n_points;i++){
+    for (int i=1;i < n_points;i++){
         vertices[i].addConstraint(mav_trajectory_generation::derivative_order::POSITION, Eigen::Vector3d(waypoints[0][i],waypoints[1][i],waypoints[2][i]));
     }
     vertices[n_points-1].addConstraint(mav_trajectory_generation::derivative_order::VELOCITY, Eigen::Vector3d(0,0,0));
     vertices[n_points-1].addConstraint(mav_trajectory_generation::derivative_order::ACCELERATION, Eigen::Vector3d(0,0,0));
 
-    float v_x = (waypoints[0][n_points-2]-waypoints[0][n_points-1]);
-    float v_y = (waypoints[1][n_points-2]-waypoints[1][n_points-1]);
-    float v_z = (waypoints[2][n_points-2]-waypoints[2][n_points-1]);
     //Calculate time slots
 
-    #ifdef FAST
-    double v_max = speed * 10;
-    auto segment_times = mav_trajectory_generation::estimateSegmentTimes(vertices,v_max,a_max_*6);
-    #else
-    
-    double v_max = speed ;
-    // double v_max = speed * 2;
+    double v_max = speed;
     auto segment_times = mav_trajectory_generation::estimateSegmentTimes(vertices,v_max,a_max_);
     
-    #endif
-
     const int N = 10;
     // const int N = 6;
     mav_trajectory_generation::Segment::Vector segments;
@@ -117,22 +126,16 @@ void ETHSplineGenerator::genTraj(const std::vector<std::vector<float>>& waypoint
         opt.getPolynomialOptimizationRef().getSegments(&segments);
         opt.getTrajectory((mav_trajectory_generation::Trajectory *)trajectory.get());
         }
+
+    const float time_alpha = 0.2;
+    average_trajectory_generation_elapsed_time_ =  average_trajectory_generation_elapsed_time_*(1-time_alpha)+ time_alpha * (ros::Time::now()-t_i).toSec();
     
+    next_trajectory_mutex_.lock();
+    next_traj_ptr_ = std::move(trajectory);
+    next_trajectory_mutex_.unlock();
 
-    trajectory_mutex_.lock();
-    traj_ptr_ = std::move(trajectory);
-    endTime_ = traj_ptr_->getMaxTime();
-    delay_t_assigned = false;
-    trajectory_generated_=true;
-    trajectory_mutex_.unlock();
+    swapOldTrajectoryWithNewTrajectory();
     
-    time_mutex_.lock();
-    begin_time_ = ros::Time::now();
-    time_mutex_.unlock();
-
-    // std::cout << "quitting Thread 1 "<< std::endl;
-
-
     // return checkTrajectoryFeasibility();
 
 }
@@ -147,7 +150,7 @@ float locateDroneInTraj(Eigen::Vector3d actual_pos,const mav_trajectory_generati
     float dist = 0.0f;
     float min_dist = (actual_pos - trajectory->evaluate(0.0f)).norm(); 
     float delay_time = 0.0f;
-    #define MAX_EVALUATION_TIME 10
+    #define MAX_EVALUATION_TIME 5
     float evaluation_time = (trajectory->getMaxTime()<MAX_EVALUATION_TIME)?trajectory->getMaxTime():MAX_EVALUATION_TIME;
 
     for (float t = step; t < trajectory->getMaxTime();t+= step){
@@ -157,7 +160,7 @@ float locateDroneInTraj(Eigen::Vector3d actual_pos,const mav_trajectory_generati
             delay_time = t;
         }
     }
-    return delay_time + 0.2;
+    return delay_time;
 }
 
 
@@ -173,12 +176,50 @@ bool ETHSplineGenerator::generateTrajectory(const std::vector<std::vector<float>
     return true;
 }
 
-bool ETHSplineGenerator::evaluateTrajectory(float t , std::array<std::array<float,3>,4>& refs){
+void ETHSplineGenerator::swapOldTrajectoryWithNewTrajectory(){
+    
+    // indent to ease lock understanding
+    next_trajectory_mutex_.lock();
+    float delay_t  = locateDroneInTraj(actual_pos_,next_traj_ptr_.get());
+    next_trajectory_mutex_.unlock();
+
     trajectory_mutex_.lock();
-    if (!delay_t_assigned){
-        delay_t_ = locateDroneInTraj(actual_pos_,traj_ptr_.get());
-        delay_t_assigned = true;
+        next_trajectory_mutex_.lock();
+            traj_ptr_ = std::move(next_traj_ptr_);
+            std::cout << "Trajectory swaped" << std::endl;
+            next_traj_ptr_ = nullptr;
+        next_trajectory_mutex_.unlock();
+        delay_t_ = delay_t;
+        end_time_ = traj_ptr_->getMaxTime();
+            
+        time_mutex_.lock();
+            begin_time_ = ros::Time::now();
+        time_mutex_.unlock();
+        trajectory_generated_=true;
+    trajectory_mutex_.unlock();
+
+}
+bool ETHSplineGenerator::checkTrajectorySwap(){
+    std::cout << "CHECKING TRAJ" << std::endl;
+
+    bool out = false;
+    next_trajectory_mutex_.lock();
+    if(next_traj_ptr_ == nullptr){;}
+    else{
+            out=true;   
+            std::cout << "CHECK TRAJ SWAP = TRUE" << std::endl;
     }
+    next_trajectory_mutex_.unlock();
+    return out;
+}
+
+bool ETHSplineGenerator::evaluateTrajectory(float t , std::array<std::array<float,3>,4>& refs, bool for_plot){
+    // std::cout << "EVALUATING TRAJ" << std::endl;
+    
+
+    
+    // if (checkTrajectorySwap())swapOldTrajectoryWithNewTrajectory();
+    trajectory_mutex_.lock();
     
     if (traj_ptr_ == nullptr){
         std::cout << "no traj jet" << std::endl;
@@ -186,11 +227,13 @@ bool ETHSplineGenerator::evaluateTrajectory(float t , std::array<std::array<floa
         return false;
     } 
     
-    static auto last_refs = refs;
-    t = t + delay_t_ + 0.2f;
+    // static auto last_refs = refs;
+    t = t + delay_t_;
+    last_t_evaluated_ = t;
     
-    if (t > endTime_){
-        if (t < endTime_ + 0.5){
+    if (t > end_time_){
+        if (t < end_time_ + 0.5){
+            traj_evaluation_finished_ = true;
             //set velocities and accels to 0.0f
             for (int i=0;i<refs.size();i++){
                 refs[i][1]=0.0f;
@@ -203,21 +246,21 @@ bool ETHSplineGenerator::evaluateTrajectory(float t , std::array<std::array<floa
         std::cerr<< "trajectory evaluated in t<0!!" <<std::endl;
     }
     else{
-
+        const float alpha = 1;
         int derivative_order;
         derivative_order = mav_trajectory_generation::derivative_order::POSITION;
         Eigen::VectorXd sample = traj_ptr_->evaluate(t, derivative_order);
         if (sample.size()>4) throw std::out_of_range("sample size is higher than 4\n");
         
-        for (int i=0;i<sample.size();i++) refs[i][0]=sample[i];
+        for (int i=0;i<sample.size();i++) refs[i][0]= sample[i];
         
         derivative_order = mav_trajectory_generation::derivative_order::VELOCITY;
         sample = traj_ptr_->evaluate(t, derivative_order);
-        for (int i=0;i<sample.size();i++) refs[i][1]=sample[i];
+        for (int i=0;i<sample.size();i++) refs[i][1]= sample[i];
         
         derivative_order = mav_trajectory_generation::derivative_order::ACCELERATION;
         sample = traj_ptr_->evaluate(t, derivative_order);
-        for (int i=0;i<sample.size();i++)refs[i][2]=sample[i];
+        for (int i=0;i<sample.size();i++)refs[i][2]=  sample[i];
 
         #ifdef AUTOYAW 
             // refs[3][0] = -atan2f((double)refs[0][1],(double)refs[1][1])+M_PI/2.0f;
@@ -225,6 +268,7 @@ bool ETHSplineGenerator::evaluateTrajectory(float t , std::array<std::array<floa
         #endif
         
     }
+    if (!for_plot) last_sended_refs_= refs;
     trajectory_mutex_.unlock();
     return true;
 

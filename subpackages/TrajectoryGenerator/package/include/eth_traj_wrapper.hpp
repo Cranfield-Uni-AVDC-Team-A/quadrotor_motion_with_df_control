@@ -56,14 +56,25 @@ private :
     // mav_trajectory_generation::Trajectory trajectory_;    
 
     std::unique_ptr<mav_trajectory_generation::Trajectory> traj_ptr_ = nullptr;
+    std::unique_ptr<mav_trajectory_generation::Trajectory> next_traj_ptr_ = nullptr;
 
     std::mutex trajectory_mutex_;    
     std::mutex time_mutex_;
+    std::mutex next_trajectory_mutex_;
     std::thread gen_traj_thread_;
     std::thread plot_thread_;
 
     float delay_t_ = 0.0f;
     bool delay_t_assigned = false;
+
+    // variables for multi-trajectory handling
+    float new_trajectory_solicitation_time_ = 0.0f;
+    float last_t_evaluated_ = 0.0f;
+    bool traj_evaluation_finished_ = true;
+    float average_trajectory_generation_elapsed_time_ = 1.0f;
+    void swapOldTrajectoryWithNewTrajectory();
+    bool checkTrajectorySwap();
+    std::array<std::array<float,3>,4> last_sended_refs_;
 
     ros::Time begin_time_;
     float yaw_measured_ = 0.0f;
@@ -78,7 +89,7 @@ public:
 
     bool generateTrajectory(const std::vector<std::vector<float>>& waypoints, float speed){return true;}
     bool generateTrajectory(const std::vector<std::vector<float>>& waypoints, float speed , const std::vector<float>& actual_speed_acc);
-    bool evaluateTrajectory(float t , std::array<std::array<float,3>,4>& refs_);
+    bool evaluateTrajectory(float t , std::array<std::array<float,3>,4>& refs_,bool for_plot=false);
     
     inline ros::Time getBeginTime(){
         time_mutex_.lock();

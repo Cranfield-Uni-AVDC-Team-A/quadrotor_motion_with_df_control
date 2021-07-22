@@ -38,13 +38,13 @@ bool CircleGenerator::generateTrajectory(const vector<vector<float>>& waypoints,
     radius_ = sqrt(expr)/2.0f;
     std::cout<<"radius "<<radius_ << std::endl;
     omega_  = speed / radius_;
-    endTime_ = 100000; 
+    end_time_ = 100000; 
     beginTime_ = ros::Time().now();
     trajectory_generated_=true;
     return true;
 }
 
-bool CircleGenerator::evaluateTrajectory(float t ,  std::array<std::array<float,3>,4>& refs) {
+bool CircleGenerator::evaluateTrajectory(float t ,  std::array<std::array<float,3>,4>& refs, bool for_plot) {
     refs[0][0] = radius_*sin(omega_*t);
     refs[1][0] = radius_*cos(omega_*t);
     refs[2][0] = height_;
@@ -103,13 +103,13 @@ bool LemniscateGenerator::generateTrajectory(const vector<vector<float>>& waypoi
     radius_ = sqrt(expr)/2.0f;
     std::cout<<"radius "<<radius_ << std::endl;
     omega_  = speed / radius_;
-    endTime_ = 10000; 
+    end_time_ = 10000; 
     trajectory_generated_=true;
     
     return true;
 };
 
-bool LemniscateGenerator::evaluateTrajectory(float time ,  std::array<std::array<float,3>,4>& refs){
+bool LemniscateGenerator::evaluateTrajectory(float time ,  std::array<std::array<float,3>,4>& refs,bool for_plot){
     auto t = omega_*time;
     auto a = radius_*sqrt(2);
 

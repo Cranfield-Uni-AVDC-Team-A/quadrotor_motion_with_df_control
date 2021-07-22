@@ -71,6 +71,8 @@ void TrajectoryPublisher::publishTrajectory(){
     
     auto time = ros::Time().now() - traj_gen_->getBeginTime();
     bool publish  = traj_gen_->evaluateTrajectory(time.toSec(),refs);
+    
+    static std::array<std::array<float,3>,4> prev_refs = refs;
 
     switch (yaw_mode_){
         case aerostack_msgs::TrajectoryWaypoints::KEEP_YAW:{
@@ -104,11 +106,13 @@ void TrajectoryPublisher::publishTrajectory(){
     static vector<double> vel(4);
     static vector<double> acc(4);
 
+    const float alpha = 0.2;
     for(int i =0;i<pos.size();i++){
-        pos[i] = refs[i][0];
-        vel[i] = refs[i][1];
-        acc[i] = refs[i][2];
+        pos[i] = (1-alpha)* prev_refs[i][0] + alpha * refs[i][0];
+        vel[i] = (1-alpha)* prev_refs[i][1] + alpha *refs[i][1];
+        acc[i] = (1-alpha)* prev_refs[i][2] + alpha *refs[i][2];
     }
+    prev_refs = refs;
     
     traj_msgs.positions = pos;
     traj_msgs.velocities = vel;
@@ -136,7 +140,7 @@ void TrajectoryPublisher::plotTrajectory(float period){
     
     for (float t_ = 0; t_ < traj_gen_->getEndTime()+1;t_+=period ){
 
-        traj_gen_->evaluateTrajectory(t_, poses);
+        traj_gen_->evaluateTrajectory(t_, poses,true);
         
         x = poses[0][0];
         y = poses[1][0];
@@ -246,7 +250,7 @@ void TrajectoryPublisher::CallbackWaypointsTopic(const aerostack_msgs::Trajector
     if (is_trajectory_generated_) {
         begin_traj_yaw_ = actual_pose_[3];
         begin_time_ = ros::Time::now();
-        plotTrajectory(0.2);
+        plotTrajectory(0.4);
     }
 }
 
