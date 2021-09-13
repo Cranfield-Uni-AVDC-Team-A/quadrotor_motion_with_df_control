@@ -85,7 +85,8 @@ void BehaviorTakeOffWithDF::onActivate(){
 
   activationPosition = position_;
   t_activacion_ = ros::Time::now();
-  
+
+  doOnce = true;
 }
 
 void BehaviorTakeOffWithDF::onDeactivate(){
@@ -96,7 +97,6 @@ void BehaviorTakeOffWithDF::onDeactivate(){
 }
 
 void BehaviorTakeOffWithDF::onExecute(){
-  static bool doOnce = true;
   if(doOnce && (ros::Time::now()-t_activacion_).toSec()>1){
     sendAltitudeSpeedReferences();
     doOnce = false;

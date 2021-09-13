@@ -31,6 +31,7 @@
 #ifndef FOLLOW_PATH_H
 #define FOLLOW_PATH_H
 
+#include <yaml-cpp/yaml.h>
 // ROS
 #include "std_msgs/Float32MultiArray.h"
 #include <ros/ros.h>
@@ -41,6 +42,7 @@
 #include <aerostack_msgs/FlightActionCommand.h>
 #include "aerostack_msgs/FlightState.h"
 #include <nav_msgs/Path.h>
+#include "trajectory_msgs/JointTrajectoryPoint.h"
 // Aerostack libraries
 #include <BehaviorExecutionManager.h>
 #include "ros_utils_lib/ros_utils.hpp"
@@ -58,12 +60,14 @@ private:
   std::string command_high_level_str;
   std::string status_str;
   std::string path_blocked_topic_str;
+  std::string motion_reference_traj_topic_;
   
   ros::NodeHandle node_handle;
   std::string nspace; 
   // Subscriber
   ros::Subscriber status_sub;
   ros::Subscriber path_blocked_sub;
+  ros::Subscriber traj_sub_;
   //Publishers
   ros::Publisher command_high_level_pub;
   
@@ -89,6 +93,8 @@ public:
 // Callbacks
 void statusCallBack(const aerostack_msgs::FlightState &msg);
 void pathBlockedCallBack(const std_msgs::Bool &msg);
+void CallbackTrajectoryTopic(const trajectory_msgs::JointTrajectoryPoint& traj);
+
 };
 
 #endif

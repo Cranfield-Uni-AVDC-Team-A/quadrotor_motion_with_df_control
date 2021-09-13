@@ -76,6 +76,7 @@ private:
   bool isLow;
   double take_off_speed = 0.2;
   double take_off_altitude = 1;
+  bool doOnce = false;
 
   ros::Time t_activacion_;
 

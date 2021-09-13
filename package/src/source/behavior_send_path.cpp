@@ -52,10 +52,10 @@ void BehaviorSendPath::onConfigure(){
   ros_utils_lib::getPrivateParam<std::string>("~motion_reference_waypoints_path_topic"	  , motion_reference_waypoints_path_topic   ,"motion_reference/waypoints");
   ros_utils_lib::getPrivateParam<std::string>("~motion_reference_traj_topic"    , motion_reference_traj_topic_,     "motion_reference/trajectory");
   path_references_pub_ = nh.advertise<aerostack_msgs::TrajectoryWaypoints>("/" + nspace + "/" + motion_reference_waypoints_path_topic, 1, true);
-  traj_sub_ = nh.subscribe("/" + nspace + "/" + motion_reference_traj_topic_, 1, &BehaviorSendPath::CallbackTrajectoryTopic,this);
 }
 
 void BehaviorSendPath::onActivate(){
+  traj_sub_ = nh.subscribe("/" + nspace + "/" + motion_reference_traj_topic_, 1, &BehaviorSendPath::CallbackTrajectoryTopic,this);
   int yaw_mode = aerostack_msgs::TrajectoryWaypoints::PATH_FACING;
   double speed = 1;
   aerostack_msgs::TrajectoryWaypoints reference_waypoints;
@@ -95,6 +95,7 @@ void BehaviorSendPath::onActivate(){
 
 void BehaviorSendPath::onDeactivate(){
   moving = false;
+  traj_sub_.shutdown();
 }
 
 void BehaviorSendPath::onExecute(){
@@ -119,7 +120,7 @@ void BehaviorSendPath::CallbackTrajectoryTopic(const trajectory_msgs::JointTraje
   if (traj.time_from_start.toSec() - previous_time < -0.001 ){
     std::cout << "TRAJ GENERATED" <<std::endl;
     std::cout << "t0:" << traj.time_from_start.toSec() << "  t1:"  << previous_time <<std::endl;
-    new_traj_generated_ = true;  
+    new_traj_generated_ = true;
   }
   if (new_traj_generated_  && traj.time_from_start.toSec() > 0.1){
   
@@ -131,7 +132,6 @@ void BehaviorSendPath::CallbackTrajectoryTopic(const trajectory_msgs::JointTraje
     if (value == 0.0f){
       if (moving)
       {
-        std::cout << "SEND PATH GOAL ACHIEVED" << std::endl;
         new_traj_generated_ = false;  
         BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
       }

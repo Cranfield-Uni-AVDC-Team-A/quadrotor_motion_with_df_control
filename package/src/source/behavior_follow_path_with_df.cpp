@@ -52,6 +52,7 @@ void BehaviorFollowPathWithDF::onConfigure(){
   ros_utils_lib::getPrivateParam<std::string>("~controllers_topic"	                      , command_high_level_str                  ,"actuator_command/flight_action");
   ros_utils_lib::getPrivateParam<std::string>("~status_topic"	                            , status_str                              ,"self_localization/flight_state");
   ros_utils_lib::getPrivateParam<std::string>("~path_blocked_topic"	                      , path_blocked_topic_str                  ,"environnment/path_blocked_by_obstacle");
+  ros_utils_lib::getPrivateParam<std::string>("~motion_reference_traj_topic"              , motion_reference_traj_topic_            ,"motion_reference/trajectory");
 
   //Subscriber
   status_sub = node_handle.subscribe("/" + nspace + "/"+status_str, 1, &BehaviorFollowPathWithDF::statusCallBack, this);
@@ -93,6 +94,12 @@ void BehaviorFollowPathWithDF::onActivate(){
   high_level_command.action = aerostack_msgs::FlightActionCommand::MOVE;
   command_high_level_pub.publish(high_level_command);
 
+  std::string arguments = getParameters();
+  YAML::Node config_file = YAML::Load(arguments);
+  if(config_file["path"].IsDefined()){
+    traj_sub_ = node_handle.subscribe("/" + nspace + "/" + motion_reference_traj_topic_, 1, &BehaviorFollowPathWithDF::CallbackTrajectoryTopic,this);
+    setExecutionGoal(ExecutionGoals::ACHIEVE_GOAL);
+  }
 }
 
 void BehaviorFollowPathWithDF::onDeactivate(){
@@ -102,6 +109,7 @@ void BehaviorFollowPathWithDF::onDeactivate(){
   command_high_level_pub.publish(msg);
   command_high_level_pub.shutdown();
   path_blocked_sub.shutdown();
+  traj_sub_.shutdown();
 }
 
 void BehaviorFollowPathWithDF::checkProcesses() { 
@@ -115,4 +123,20 @@ void BehaviorFollowPathWithDF::pathBlockedCallBack(const std_msgs::Bool &msg){
 
 void BehaviorFollowPathWithDF::statusCallBack(const aerostack_msgs::FlightState &msg){
   status_msg = msg;
+}
+
+void BehaviorFollowPathWithDF::CallbackTrajectoryTopic(const trajectory_msgs::JointTrajectoryPoint& traj){
+  double value = 0.0f;
+  static float previous_time = traj.time_from_start.toSec();
+  if (traj.time_from_start.toSec() - previous_time < -0.001 ){
+  }
+  for (unsigned short int i =0; i<3; i++ ){
+    value += fabs(traj.velocities[i]);
+    value += fabs(traj.accelerations[i]);
+  }
+  if (value == 0.0f){
+    BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
+  }
+  previous_time = traj.time_from_start.toSec();
+    
 }
