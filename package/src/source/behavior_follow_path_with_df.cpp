@@ -51,7 +51,6 @@ void BehaviorFollowPathWithDF::onConfigure(){
 
   ros_utils_lib::getPrivateParam<std::string>("~controllers_topic"	                      , command_high_level_str                  ,"actuator_command/flight_action");
   ros_utils_lib::getPrivateParam<std::string>("~status_topic"	                            , status_str                              ,"self_localization/flight_state");
-  ros_utils_lib::getPrivateParam<std::string>("~path_blocked_topic"	                      , path_blocked_topic_str                  ,"environnment/path_blocked_by_obstacle");
   ros_utils_lib::getPrivateParam<std::string>("~motion_reference_traj_topic"              , motion_reference_traj_topic_            ,"motion_reference/trajectory");
 
   //Subscriber
@@ -75,19 +74,13 @@ void BehaviorFollowPathWithDF::onExecute(){
 }
 
 void BehaviorFollowPathWithDF::checkProgress() {
-  if(path_blocked){
-    path_blocked=false;
-    BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::WRONG_PROGRESS);
-  }
+
 }
 
 void BehaviorFollowPathWithDF::onActivate(){
  //Subscribers
-  path_blocked_sub = node_handle.subscribe("/" + nspace + "/"+path_blocked_topic_str, 1, &BehaviorFollowPathWithDF::pathBlockedCallBack, this);
   //Publishers
   command_high_level_pub = node_handle.advertise<aerostack_msgs::FlightActionCommand>("/" + nspace + "/"+command_high_level_str, 1, true);
-
-  path_blocked=false;
 
   //MOVE
   high_level_command.header.frame_id = "behavior_follow_path";
@@ -117,9 +110,7 @@ void BehaviorFollowPathWithDF::checkProcesses() {
 }
 
 // Callbacks
-void BehaviorFollowPathWithDF::pathBlockedCallBack(const std_msgs::Bool &msg){
-  path_blocked = msg.data;
-}
+
 
 void BehaviorFollowPathWithDF::statusCallBack(const aerostack_msgs::FlightState &msg){
   status_msg = msg;

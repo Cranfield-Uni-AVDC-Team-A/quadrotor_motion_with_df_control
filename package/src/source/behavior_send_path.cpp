@@ -51,13 +51,16 @@ void BehaviorSendPath::onConfigure(){
   nspace = getNamespace();
   ros_utils_lib::getPrivateParam<std::string>("~motion_reference_waypoints_path_topic"	  , motion_reference_waypoints_path_topic   ,"motion_reference/waypoints");
   ros_utils_lib::getPrivateParam<std::string>("~motion_reference_traj_topic"    , motion_reference_traj_topic_,     "motion_reference/trajectory");
+  ros_utils_lib::getPrivateParam<std::string>("~path_blocked_topic"	                      , path_blocked_topic_str                  ,"environnment/path_blocked_by_obstacle");
   path_references_pub_ = nh.advertise<aerostack_msgs::TrajectoryWaypoints>("/" + nspace + "/" + motion_reference_waypoints_path_topic, 1, true);
 }
 
 void BehaviorSendPath::onActivate(){
   traj_sub_ = nh.subscribe("/" + nspace + "/" + motion_reference_traj_topic_, 1, &BehaviorSendPath::CallbackTrajectoryTopic,this);
+  path_blocked_sub = nh.subscribe("/" + nspace + "/"+path_blocked_topic_str, 1, &BehaviorSendPath::pathBlockedCallBack, this);
   int yaw_mode = aerostack_msgs::TrajectoryWaypoints::PATH_FACING;
   double speed = 1;
+  path_blocked=false;
   aerostack_msgs::TrajectoryWaypoints reference_waypoints;
   //Checks if path distance is not too long and argument is defined
   std::string arguments = getParameters();
@@ -90,7 +93,7 @@ void BehaviorSendPath::onActivate(){
   reference_waypoints.max_speed = speed;
   path_references_pub_.publish(reference_waypoints);
   moving = false;
-  new_traj_generated_ = false;
+  new_traj_generated_ = true;
 }
 
 void BehaviorSendPath::onDeactivate(){
@@ -109,27 +112,37 @@ void BehaviorSendPath::checkGoal(){
 }
 
 void BehaviorSendPath::checkProgress(){
+  if(path_blocked){
+    path_blocked=false;
+    BehaviorExecutionManager::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::WRONG_PROGRESS);
+  }
 }
 
 void BehaviorSendPath::checkProcesses(){
 }
 
+void BehaviorSendPath::pathBlockedCallBack(const std_msgs::Bool &msg){
+  path_blocked = msg.data;
+}
+
 void BehaviorSendPath::CallbackTrajectoryTopic(const trajectory_msgs::JointTrajectoryPoint& traj){
   double value = 0.0f;
-  static float previous_time = traj.time_from_start.toSec();
+  
+  //std::cout << traj.time_from_start.toSec() - previous_time <<std::endl;
   if (traj.time_from_start.toSec() - previous_time < -0.001 ){
     std::cout << "TRAJ GENERATED" <<std::endl;
     std::cout << "t0:" << traj.time_from_start.toSec() << "  t1:"  << previous_time <<std::endl;
     new_traj_generated_ = true;
   }
-  if (new_traj_generated_  && traj.time_from_start.toSec() > 0.1){
   
+  if (new_traj_generated_  && traj.time_from_start.toSec() > 0.1){
     for (unsigned short int i =0; i<3; i++ ){
       value += fabs(traj.velocities[i]);
       value += fabs(traj.accelerations[i]);
     }
 
     if (value == 0.0f){
+      
       if (moving)
       {
         new_traj_generated_ = false;  

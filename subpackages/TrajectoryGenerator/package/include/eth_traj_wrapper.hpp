@@ -19,7 +19,7 @@
 #include "mav_trajectory_generation_ros/feasibility_sampling.h"
 #include "mav_trajectory_generation_ros/feasibility_recursive.h"
 #include "mav_trajectory_generation_ros/input_constraints.h"
-
+#include "ros_utils_lib/ros_utils.hpp"
 
 #include "nav_msgs/Path.h"
 
@@ -44,7 +44,7 @@ private :
     // const int derivative_to_optimize_ = mav_trajectory_generation::derivative_order::JERK;
     const int derivative_to_optimize_ = mav_trajectory_generation::derivative_order::ACCELERATION;
     // const int derivative_to_optimize_ = mav_trajectory_generation::derivative_order::VELOCITY;
-
+    std::string n_space;
     const int dimension_ = 3;
     // const double a_max_ = 0.5*9.81f;
     const double a_max_ = 1*9.81f;
@@ -54,7 +54,6 @@ private :
 
 
     // mav_trajectory_generation::Trajectory trajectory_;    
-
     std::unique_ptr<mav_trajectory_generation::Trajectory> traj_ptr_ = nullptr;
 
     std::mutex trajectory_mutex_;    

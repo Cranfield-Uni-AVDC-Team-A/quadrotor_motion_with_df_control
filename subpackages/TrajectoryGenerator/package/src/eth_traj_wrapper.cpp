@@ -21,7 +21,8 @@ ETHSplineGenerator::ETHSplineGenerator(TrajGeneratorOptimizator type) :type_(typ
     constraints_.acc_yaw_max   = M_PI;
     begin_time_=ros::Time::now();
     static ros::NodeHandle nh;
-    static ros::Subscriber sub_pose = nh.subscribe("/drone1/self_localization/pose",1,&ETHSplineGenerator::poseCallback,this);
+    ros_utils_lib::getPrivateParam<std::string>("~namespace", n_space, "drone1");
+    static ros::Subscriber sub_pose = nh.subscribe("/" + n_space+ "/self_localization/pose",1,&ETHSplineGenerator::poseCallback,this);
 };
 
 

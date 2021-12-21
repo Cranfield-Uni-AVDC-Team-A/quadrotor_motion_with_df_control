@@ -34,6 +34,7 @@
 // ROS
 #include <geometry_msgs/PoseStamped.h>
 #include <ros/ros.h>
+#include <std_msgs/Bool.h>
 #include <yaml-cpp/yaml.h>
 #include "trajectory_msgs/JointTrajectoryPoint.h"
 
@@ -61,12 +62,14 @@ private:
 
   bool moving = false;
   bool new_traj_generated_ = false;
-
+  float previous_time=0.0;
   std::string motion_reference_waypoints_path_topic;
   std::string motion_reference_traj_topic_;
+  std::string path_blocked_topic_str;
   ros::Publisher path_references_pub_;
   ros::Subscriber traj_sub_;
-
+  ros::Subscriber path_blocked_sub;  
+  bool path_blocked;
 private:
   // BehaviorExecutionManager
   void onConfigure();
@@ -79,6 +82,9 @@ private:
   void checkProcesses();
 
   void CallbackTrajectoryTopic(const trajectory_msgs::JointTrajectoryPoint& traj);
+
+public:
+  void pathBlockedCallBack(const std_msgs::Bool &msg);
 };
 
 #endif

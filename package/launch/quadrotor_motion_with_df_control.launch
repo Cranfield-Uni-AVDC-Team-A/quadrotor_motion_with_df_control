@@ -1,6 +1,6 @@
 <launch>
-    <arg name="namespace"                                     default = "drone1" />
-    <arg name="uav_mass"                                      default = "0.7"     />
+    <arg name="namespace"                                     default = "$(arg namespace)" />
+    <arg name="uav_mass"                                      default = "1.75"     />
     <arg name="frecuency"                                     default = "100.0" />
     <arg name="activate_behavior_srv"                         default = "activate_behavior" />
     <arg name="deactivate_behavior_srv"                       default = "deactivate_behavior" />
